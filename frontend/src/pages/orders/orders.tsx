@@ -102,7 +102,7 @@ const OrdersPage = () => {
                         <h2 className="text-base font-semibold text-foreground">
                           Order #{order.orderNo}
                         </h2>
-                        <OrderStatusBadge status={order.status as any} />
+                        <OrderStatusBadge status={order.status} />
                       </div>
                       <p className="mt-1 text-sm text-muted-foreground">
                         Placed on {formatDate(order.createdAt)}
