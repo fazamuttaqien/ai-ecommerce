@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bot, MessageCircle, X } from 'lucide-react'
+import { Bot, MessageCircle } from 'lucide-react'
 
+import { AIChatInput } from '@/components/ai/ai-chat-input'
+import { AIChatMessage } from '@/components/ai/ai-chat-message'
+import { AIProductSuggestion } from '@/components/ai/ai-product-suggestion'
+import { Card } from '@/components/ui/card'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -9,10 +14,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Card } from '@/components/ui/card'
-import { AIChatInput } from '@/components/ai/ai-chat-input'
-import { AIChatMessage } from '@/components/ai/ai-chat-message'
 import { useAIChat } from '@/hooks/use-ai-chat'
 
 export const AIChatWidget = () => {
@@ -67,7 +68,19 @@ export const AIChatWidget = () => {
                 </Card>
               ) : (
                 messages.map((message, index) => (
-                  <AIChatMessage key={`${message.role}-${index}`} message={message} />
+                  <div key={`${message.role}-${index}`} className="flex flex-col gap-2">
+                    <AIChatMessage message={message} />
+                    {message.role === 'assistant' && message.products?.length ? (
+                      <div className="ml-9 grid min-w-0 gap-2">
+                        {message.products.map((product, productIndex) => (
+                          <AIProductSuggestion
+                            key={product._id ?? product.slug ?? `${index}-${productIndex}`}
+                            product={product}
+                          />
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
                 ))
               )}
 
