@@ -7,6 +7,7 @@ const ErrorCodes = {
   ERR_FORBIDDEN: 'ERR_FORBIDDEN',
   ERR_NOT_FOUND: 'ERR_NOT_FOUND',
   ERR_VALIDATION: 'ERR_VALIDATION',
+  ERR_AI_UNAVAILABLE: 'ERR_AI_UNAVAILABLE',
 } as const;
 
 type ErrorCodeType = (typeof ErrorCodes)[keyof typeof ErrorCodes];
