@@ -7,6 +7,7 @@ import cartRoute from './cart.route';
 import addressRoute from './address.route';
 import orderRoute from './order.route';
 import reviewRoute from './review.route';
+import aiRoute from './ai.route';
 
 const router: Router = Router();
 
@@ -18,5 +19,6 @@ router.use('/cart', cartRoute);
 router.use('/addresses', addressRoute);
 router.use('/orders', orderRoute);
 router.use('/reviews', reviewRoute);
+router.use('/ai', aiRoute);
 
 export default router;
