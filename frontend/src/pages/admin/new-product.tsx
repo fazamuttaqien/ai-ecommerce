@@ -31,7 +31,6 @@ import {
 import {
   getAllCategoriesQueryFn,
   createProductMutationFn,
-  // generateProductAiMutationFn,
 } from '@/lib/api'
 import { calculateSalePrice } from '@/lib/utils'
 import ProductImageUploader from './components/product-image-uploader'
@@ -97,36 +96,6 @@ export default function AdminNewProductPage() {
       )
     },
   })
-
-  // const aiMutation = useMutation({
-  //   mutationFn: generateProductAiMutationFn,
-  //   onError: (error: any) => {
-  //     toast.error(
-  //       error?.response?.data?.message ||
-  //         error?.message ||
-  //         'AI generation failed',
-  //     )
-  //   },
-  // })
-
-  // const handleRephraseTitle = () => {
-  //   const name = form.getValues('name')
-  //   if (!name.trim()) return
-  //   const unit = form.getValues('unit')
-  //   aiMutation.mutate(
-  //     { action: 'rephrase-title', title: name, unit },
-  //     { onSuccess: (data) => form.setValue('name', data.result) },
-  //   )
-  // }
-
-  // const handleGenerateDesc = () => {
-  //   const name = form.getValues('name')
-  //   if (!name.trim()) return
-  //   aiMutation.mutate(
-  //     { action: 'generate-desc', title: name },
-  //     { onSuccess: (data) => form.setValue('description', data.result) },
-  //   )
-  // }
 
   const onSubmit = (values: ProductFormValues) => {
     setImageError(null)
@@ -213,22 +182,6 @@ export default function AdminNewProductPage() {
                     <FormItem>
                       <div className="flex items-center justify-between">
                         <FormLabel>Product Name</FormLabel>
-                        {/* <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="gap-2 bg-linear-to-r from-purple-500 from-50%  to-blue-500 text-white"
-                          disabled={!field.value.trim() || aiMutation.isPending}
-                          onClick={handleRephraseTitle}
-                        >
-                          {aiMutation.isPending &&
-                          aiMutation.variables?.action === 'rephrase-title' ? (
-                            <Spinner />
-                          ) : (
-                            <Sparkles className="h-3 w-3" />
-                          )}
-                          Rephrase
-                        </Button> */}
                       </div>
                       <FormControl>
                         <Input
@@ -249,24 +202,6 @@ export default function AdminNewProductPage() {
                     <FormItem>
                       <div className="flex items-center justify-between">
                         <FormLabel>Description</FormLabel>
-                        {/* <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="gap-2 bg-linear-to-r from-purple-500 from-50%  to-blue-500 text-white"
-                          disabled={
-                            !form.watch('name').trim() || aiMutation.isPending
-                          }
-                          onClick={handleGenerateDesc}
-                        >
-                          {aiMutation.isPending &&
-                          aiMutation.variables?.action === 'generate-desc' ? (
-                            <Spinner />
-                          ) : (
-                            <Sparkles className="h-3 w-3" />
-                          )}
-                          Generate
-                        </Button> */}
                       </div>
                       <FormControl>
                         <Textarea

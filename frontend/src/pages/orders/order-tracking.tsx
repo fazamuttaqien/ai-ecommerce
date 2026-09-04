@@ -81,12 +81,12 @@ const OrderTrackingPage = () => {
         </div>
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] animate-pulse">
           <div className="flex min-w-0 flex-col gap-6">
-            <Skeleton className="h-[100px] w-full rounded-xl" />
-            <Skeleton className="h-[300px] w-full rounded-xl" />
+            <Skeleton className="h-25 w-full rounded-xl" />
+            <Skeleton className="h-75 w-full rounded-xl" />
           </div>
           <div className="flex flex-col gap-5">
-            <Skeleton className="h-[150px] w-full rounded-xl" />
-            <Skeleton className="h-[250px] w-full rounded-xl" />
+            <Skeleton className="h-37.5 w-full rounded-xl" />
+            <Skeleton className="h-62.5 w-full rounded-xl" />
           </div>
         </div>
       </div>
@@ -95,7 +95,7 @@ const OrderTrackingPage = () => {
 
   if (!order) {
     return (
-      <div className="flex min-h-[520px] items-center justify-center py-12">
+      <div className="flex min-h-130 items-center justify-center py-12">
         <Empty className="border border-border">
           <EmptyMedia variant="icon">
             <PackageSearch />
@@ -270,7 +270,7 @@ const OrderTrackingPage = () => {
                   {order.statusHistory.map((history, idx) => (
                     <div key={idx} className="relative">
                       {/* Timeline dot */}
-                      <span className="absolute -left-[21px] top-1.5 size-2.5 rounded-full border border-background bg-primary" />
+                      <span className="absolute -left-5.25 top-1.5 size-2.5 rounded-full border border-background bg-primary" />
                       <div>
                         <p className="text-sm font-semibold capitalize text-foreground">
                           {history.status}

@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import {
   createProductController,
-  generateAIAdminController,
   getAdminAnalyticsController,
   getAdminOrdersController,
   getProductsForAdminController,
@@ -22,7 +21,6 @@ adminRoutes.use(requireAdmin);
 
 adminRoutes.get('/analytics', getAdminAnalyticsController);
 adminRoutes.get('/analytics', getAdminAnalyticsController);
-adminRoutes.post('/ai/generate', generateAIAdminController);
 adminRoutes.get('/orders', getAdminOrdersController);
 adminRoutes.put('/orders/:id/status', updateOrderStatusController);
 adminRoutes.get('/products', getProductsForAdminController);

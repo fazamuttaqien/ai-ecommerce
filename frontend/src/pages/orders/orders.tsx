@@ -56,7 +56,7 @@ const OrdersPage = () => {
           ))}
         </div>
       ) : ordersList.length === 0 ? (
-        <div className="flex min-h-[520px] items-center justify-center py-12">
+        <div className="flex min-h-130 items-center justify-center py-12">
           <Empty className="border border-border">
             <PackageSearch className="size-8" />
             <EmptyHeader>

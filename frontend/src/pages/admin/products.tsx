@@ -158,7 +158,7 @@ export default function AdminProductsPage() {
                             className="h-10 w-10 rounded-md object-cover border"
                           />
                           <div className="flex flex-col">
-                            <p className="font-medium truncate max-w-[270px]">
+                            <p className="font-medium truncate max-w-67.5">
                               {product.name}
                             </p>
                             <span className="text-xs text-muted-foreground">
@@ -167,7 +167,7 @@ export default function AdminProductsPage() {
                           </div>
                         </Link>
                       </TableCell>
-                      <TableCell className="px-2 py-2 text-sm font-mono text-muted-foreground truncate max-w-[170px]">
+                      <TableCell className="px-2 py-2 text-sm font-mono text-muted-foreground truncate max-w-42.5">
                         {product.slug}
                       </TableCell>
                       <TableCell className="px-2 py-2 font-medium text-muted-foreground">

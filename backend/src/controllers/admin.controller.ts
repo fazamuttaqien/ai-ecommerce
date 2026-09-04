@@ -15,8 +15,6 @@ import {
   updateOrderStatusService,
 } from '../services/admin.service';
 import { uploadMultipleImagesToCloudinary } from '../utils/cloudinary.util';
-import { generateAIAdminSchema } from '../validators/ai.validator';
-import { generateAIAdminService } from '../services/ai.service';
 import {
   getAdminOrdersSchema,
   updateOrderStatusBodySchema,
@@ -100,14 +98,3 @@ export const uploadProductImagesController = asyncHandler(
   },
 );
 
-export const generateAIAdminController = asyncHandler(
-  async (req: Request, res: Response) => {
-    const data = generateAIAdminSchema.parse(req.body);
-    const result = await generateAIAdminService(data);
-
-    res.status(HTTPSTATUS.OK).json({
-      message: 'AI content generated successfully',
-      ...result,
-    });
-  },
-);

@@ -244,13 +244,3 @@ export const uploadProductImagesMutationFn = async (
   })
   return response.data
 }
-
-export const generateProductAiMutationFn = async (data: {
-  action: 'rephrase-title' | 'generate-desc'
-  title: string
-  unit?: string
-  description?: string
-}): Promise<{ result: string }> => {
-  const response = await API.post('/admin/ai/generate', data)
-  return response.data
-}

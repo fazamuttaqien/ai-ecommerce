@@ -93,7 +93,7 @@ const SearchResultPage = () => {
       </section>
 
       {!normalizedQuery ? (
-        <Empty className="min-h-[360px] bg-background">
+        <Empty className="min-h-90 bg-background">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <Search className="h-8 w-8" />
@@ -142,7 +142,7 @@ const SearchResultPage = () => {
           ))}
         </div>
       ) : (
-        <Empty className="min-h-[400px]">
+        <Empty className="min-h-100">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <Search className="size-8" />

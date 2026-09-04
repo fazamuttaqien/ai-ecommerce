@@ -4,26 +4,6 @@
 GET {{baseUrl}}/analytics
 Content-Type: application/json
 
-### Generate AI admin content (rephrase title)
-POST {{baseUrl}}/ai/generate
-Content-Type: application/json
- 
-{
-  "action": "rephrase-title",
-  "title": "Ball Park Burger Buns Everything",
-  "unit": "16 oz"
-}
-
-### Generate AI admin content (generate description)
-POST {{baseUrl}}/ai/generate
-Content-Type: application/json
-
-{
-  "action": "generate-desc",
-  "title": "Ball Park Burger Buns Everything",
-  "unit": "16 oz"
-}
-
 ### Get all orders for admin (paginated)
 GET {{baseUrl}}/orders?page=1&limit=20
 Content-Type: application/json

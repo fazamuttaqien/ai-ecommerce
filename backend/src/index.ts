@@ -27,7 +27,6 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
 app.use(passport.initialize());
 
 app.get(
@@ -44,7 +43,6 @@ app.use('/api', routes);
 
 if (envConfig.NODE_ENV === 'production') {
   const clientPath = path.resolve(__dirname, '../../client/dist');
-  //Serve static files
   app.use(express.static(clientPath));
 
   app.get(/^(?!\/api).*/, (req: Request, res: Response) => {
