@@ -6,6 +6,7 @@ import {
   executeSearchProducts,
 } from '../../tools/ai/product.tools';
 import { NotFoundException } from '../../utils/app-error';
+import type { GetProductsInput } from '../../validators/product.validator';
 
 type Dependencies = NonNullable<Parameters<typeof executeSearchProducts>[1]>;
 
@@ -60,11 +61,17 @@ const baseDependencies = (): Dependencies => ({
   }),
 });
 
+async function captureProductQuery(
+  input: Parameters<Dependencies['getProducts']>[0],
+): Promise<GetProductsInput> {
+  return input;
+}
+
 async function testKeywordSearch(): Promise<void> {
   const dependencies = baseDependencies();
-  let received: Record<string, unknown> | undefined;
+  let received: GetProductsInput | undefined;
   dependencies.getProducts = async (query) => {
-    received = query;
+    received = await captureProductQuery(query);
     return baseDependencies().getProducts(query);
   };
   await executeSearchProducts({ keyword: 'phone' }, dependencies);
@@ -73,9 +80,9 @@ async function testKeywordSearch(): Promise<void> {
 
 async function testPriceFilter(): Promise<void> {
   const dependencies = baseDependencies();
-  let received: Record<string, unknown> | undefined;
+  let received: GetProductsInput | undefined;
   dependencies.getProducts = async (query) => {
-    received = query;
+    received = await captureProductQuery(query);
     return baseDependencies().getProducts(query);
   };
   await executeSearchProducts({ minPrice: 50, maxPrice: 100 }, dependencies);
@@ -85,31 +92,31 @@ async function testPriceFilter(): Promise<void> {
 
 async function testStockFilter(): Promise<void> {
   const dependencies = baseDependencies();
-  let received: Record<string, unknown> | undefined;
+  let received: GetProductsInput | undefined;
   dependencies.getProducts = async (query) => {
-    received = query;
+    received = await captureProductQuery(query);
     return baseDependencies().getProducts(query);
   };
   await executeSearchProducts({ inStock: true }, dependencies);
-  assert.equal(received?.inStock, 'true');
+  assert.equal(received?.inStock, true);
 }
 
 async function testDiscountFilter(): Promise<void> {
   const dependencies = baseDependencies();
-  let received: Record<string, unknown> | undefined;
+  let received: GetProductsInput | undefined;
   dependencies.getProducts = async (query) => {
-    received = query;
+    received = await captureProductQuery(query);
     return baseDependencies().getProducts(query);
   };
   await executeSearchProducts({ hasDiscount: true }, dependencies);
-  assert.equal(received?.hasDiscount, 'true');
+  assert.equal(received?.hasDiscount, true);
 }
 
 async function testSorting(): Promise<void> {
   const dependencies = baseDependencies();
-  let received: Record<string, unknown> | undefined;
+  let received: GetProductsInput | undefined;
   dependencies.getProducts = async (query) => {
-    received = query;
+    received = await captureProductQuery(query);
     return baseDependencies().getProducts(query);
   };
   await executeSearchProducts({ sort: 'highest-rating', limit: 5 }, dependencies);
@@ -148,9 +155,7 @@ async function testInvalidInput(): Promise<void> {
     called = true;
     return baseDependencies().getProducts(query);
   };
-  await assert.rejects(
-    executeSearchProducts({ limit: 999 }, dependencies),
-  );
+  await assert.rejects(executeSearchProducts({ limit: 999 }, dependencies));
   assert.equal(called, false);
 }
 
