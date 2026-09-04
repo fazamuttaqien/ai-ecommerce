@@ -1,3 +1,5 @@
+import { AxiosError } from 'axios'
+
 export const formatPrice = (value: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -24,4 +26,24 @@ export const getStockDisplay = ({ stockCount }: { stockCount?: number }) => {
 export const splitPrice = (price: number) => {
   const [dollars, cents = '00'] = price.toFixed(2).split('.')
   return { dollars: Number(dollars), cents: Number(cents) }
+}
+
+type ApiErrorResponse = {
+  message?: string
+}
+
+export const getErrorMessage = (
+  error: unknown,
+  fallback = 'Something went wrong',
+): string => {
+  if (error instanceof AxiosError) {
+    const message = error.response?.data as ApiErrorResponse | undefined
+    return message?.message ?? error.message ?? fallback
+  }
+
+  if (error instanceof Error) {
+    return error.message || fallback
+  }
+
+  return fallback
 }
