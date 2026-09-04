@@ -85,8 +85,10 @@ const extractRecommendedProducts = (steps: unknown[]): Array<Record<string, unkn
           image: Array.isArray(product.images) ? product.images[0] ?? null : null,
           salePrice: product.salePrice,
           originalPrice: product.originalPrice,
+          discountPercent: product.discountPercent,
           stockCount: product.stockCount,
           ratingAverage: product.ratingAverage,
+          reviewCount: product.reviewCount,
         });
       }
     }
