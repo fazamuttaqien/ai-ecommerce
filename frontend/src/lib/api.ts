@@ -11,6 +11,10 @@ import type {
   CreateOrderResponse,
   GetOrdersResponse,
   GetOrderByIdResponse,
+  AdminOrdersResponse,
+  AdminAnalyticsResponse,
+  UpdateOrderStatusInput,
+  UpdateOrderStatusResponse,
 } from '@/types/order.type'
 import API from './axios-client'
 import type { CategoryResponseType } from '@/types/categories.type'
@@ -20,6 +24,11 @@ import type {
   ProductResponseType,
   ProductDetailResponseType,
   ReviewsResponseType,
+  ReviewableOrdersResponseType,
+  CreateReviewResponseType,
+  AdminProductsResponseType,
+  CreateProductInputType,
+  CreateProductResponseType,
 } from '@/types/products.type'
 import type { CartResponseType } from '@/types/cart.type'
 import type { AIChatRequest, AIChatResponse } from '@/types/ai.type'
@@ -66,7 +75,7 @@ export const getProductDealsQueryFn = async (
 export const getProductsQueryFn = async (
   params?: ProductParams,
 ): Promise<ProductResponseType> => {
-  const queryParams: Record<string, any> = {}
+  const queryParams: ProductParams = {}
   if (params) {
     if (params.categoryId !== undefined)
       queryParams.categoryId = params.categoryId
@@ -100,9 +109,7 @@ export const getProductReviewsQueryFn = async (
 ): Promise<ReviewsResponseType> => {
   const response = await API.get<ReviewsResponseType>(
     `/products/${slug}/reviews`,
-    {
-      params,
-    },
+    { params },
   )
   return response.data
 }
@@ -157,13 +164,15 @@ export const getOrderByIdQueryFn = async (
   return response.data
 }
 
-export const getReviewableOrderItemsQueryFn = async (): Promise<any> => {
-  const response = await API.get('/reviews/reviewable')
+export const getReviewableOrderItemsQueryFn = async (): Promise<ReviewableOrdersResponseType> => {
+  const response = await API.get<ReviewableOrdersResponseType>(
+    '/reviews/reviewable',
+  )
   return response.data
 }
 
-export const getUserReviewsQueryFn = async (): Promise<any> => {
-  const response = await API.get('/reviews')
+export const getUserReviewsQueryFn = async (): Promise<ReviewsResponseType> => {
+  const response = await API.get<ReviewsResponseType>('/reviews')
   return response.data
 }
 
@@ -172,13 +181,13 @@ export const createReviewMutationFn = async (data: {
   orderItemId: string
   rating: number
   comment: string
-}): Promise<any> => {
-  const response = await API.post('/reviews', data)
+}): Promise<CreateReviewResponseType> => {
+  const response = await API.post<CreateReviewResponseType>('/reviews', data)
   return response.data
 }
 
-export const getAdminAnalyticsQueryFn = async (): Promise<any> => {
-  const response = await API.get('/admin/analytics')
+export const getAdminAnalyticsQueryFn = async (): Promise<AdminAnalyticsResponse> => {
+  const response = await API.get<AdminAnalyticsResponse>('/admin/analytics')
   return response.data
 }
 
@@ -188,26 +197,21 @@ export const getAdminOrdersQueryFn = async ({
 }: {
   page: number
   limit: number
-}): Promise<any> => {
-  const response = await API.get('/admin/orders', {
+}): Promise<AdminOrdersResponse> => {
+  const response = await API.get<AdminOrdersResponse>('/admin/orders', {
     params: { page, limit },
   })
   return response.data
 }
 
-export const updateOrderStatusMutationFn = async ({
-  orderId,
-  status,
-  note,
-}: {
-  orderId: string
-  status: string
-  note?: string
-}): Promise<any> => {
-  const response = await API.put(`/admin/orders/${orderId}/status`, {
-    status,
-    note,
-  })
+export const updateOrderStatusMutationFn = async (
+  data: UpdateOrderStatusInput,
+): Promise<UpdateOrderStatusResponse> => {
+  const { orderId, status, note } = data
+  const response = await API.put<UpdateOrderStatusResponse>(
+    `/admin/orders/${orderId}/status`,
+    { status, note },
+  )
   return response.data
 }
 
@@ -217,26 +221,20 @@ export const getAdminProductsQueryFn = async ({
 }: {
   page: number
   limit: number
-}): Promise<any> => {
-  const response = await API.get('/admin/products', {
+}): Promise<AdminProductsResponseType> => {
+  const response = await API.get<AdminProductsResponseType>('/admin/products', {
     params: { page, limit },
   })
   return response.data
 }
 
-export const createProductMutationFn = async (data: {
-  categoryId: string
-  name: string
-  description?: string
-  images: string[]
-  originalPrice: number
-  discountPercent?: number
-  discountLabel?: string | null
-  unit: string
-  stockCount?: number
-  isActive?: boolean
-}): Promise<any> => {
-  const response = await API.post('/admin/products', data)
+export const createProductMutationFn = async (
+  data: CreateProductInputType,
+): Promise<CreateProductResponseType> => {
+  const response = await API.post<CreateProductResponseType>(
+    '/admin/products',
+    data,
+  )
   return response.data
 }
 
@@ -245,10 +243,14 @@ export const uploadProductImagesMutationFn = async (
 ): Promise<{ images: string[] }> => {
   const formData = new FormData()
   files.forEach((file) => formData.append('images', file))
-  const response = await API.post('/admin/products/upload', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
+  const response = await API.post<{ images: string[] }>(
+    '/admin/products/upload',
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     },
-  })
+  )
   return response.data
 }
