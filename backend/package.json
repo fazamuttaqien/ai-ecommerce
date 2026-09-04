@@ -10,6 +10,7 @@
     "seed:categories": "ts-node --transpile-only src/seeds/category.seed.ts",
     "seed:products": "ts-node --transpile-only src/seeds/product.seed.ts",
     "test:ai-tools": "ts-node --transpile-only src/tests/ai/ai-shopping-tools.test.ts",
+    "test:ai-chat": "ts-node --transpile-only src/tests/ai/ai-chat.test.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
