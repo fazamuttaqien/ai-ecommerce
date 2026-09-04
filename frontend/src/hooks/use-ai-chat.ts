@@ -17,16 +17,21 @@ export const useAIChat = () => {
 
     const userMessage: AIChatMessage = { role: 'user', content: trimmedContent }
     const nextMessages = [...messages, userMessage]
+    const requestMessages = nextMessages.map(({ role, content: messageContent }) => ({
+      role,
+      content: messageContent,
+    }))
 
     setMessages(nextMessages)
     setError(null)
     setIsLoading(true)
 
     try {
-      const response = await postAIChat({ messages: nextMessages })
+      const response = await postAIChat({ messages: requestMessages })
       const assistantMessage: AIChatMessage = {
         role: 'assistant',
         content: response.data.content,
+        products: response.data.products ?? [],
       }
 
       setMessages((current) => [...current, assistantMessage])
