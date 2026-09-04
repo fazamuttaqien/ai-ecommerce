@@ -5,7 +5,7 @@ function uniqueEmail(): string {
 }
 
 let registeredEmail = '';
-let registeredPassword = 'Password123!';
+const registeredPassword = 'Password123!';
 
 async function request(
   method: string,

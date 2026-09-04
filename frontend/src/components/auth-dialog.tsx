@@ -64,7 +64,9 @@ export const AuthDialog = () => {
       closeAuth()
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, 'Unable to create account. Try again.'))
+      toast.error(
+        getErrorMessage(error, 'Unable to create account. Try again.'),
+      )
     },
   })
 
@@ -79,7 +81,8 @@ export const AuthDialog = () => {
   })
 
   const onLoginSubmit = (values: LoginType) => loginMutation.mutate(values)
-  const onRegisterSubmit = (values: RegisterType) => registerMutation.mutate(values)
+  const onRegisterSubmit = (values: RegisterType) =>
+    registerMutation.mutate(values)
 
   return (
     <Dialog open={isAuthOpen} onOpenChange={(open) => !open && closeAuth()}>
@@ -87,41 +90,156 @@ export const AuthDialog = () => {
         <DialogHeader className="flex flex-col items-center justify-center gap-1">
           <Logo />
           <DialogTitle className="text-2xl font-semibold tracking-tight">
-            {view === 'login' ? 'Sign in to your account' : 'Create your account'}
+            {view === 'login'
+              ? 'Sign in to your account'
+              : 'Create your account'}
           </DialogTitle>
         </DialogHeader>
 
         {view === 'login' ? (
           <Form {...loginForm}>
-            <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4 py-2">
-              <FormField control={loginForm.control} name="email" render={({ field }) => (
-                <FormItem><FormLabel>Email</FormLabel><FormControl><Input placeholder="name@example.com" type="email" autoComplete="email" className="rounded-sm" {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
-              <FormField control={loginForm.control} name="password" render={({ field }) => (
-                <FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" autoComplete="current-password" className="rounded-sm" {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
-              <Button type="submit" size="lg" className="w-full bg-green-light! text-white rounded-sm" disabled={loginMutation.isPending}>
+            <form
+              onSubmit={loginForm.handleSubmit(onLoginSubmit)}
+              className="space-y-4 py-2"
+            >
+              <FormField
+                control={loginForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="name@example.com"
+                        type="email"
+                        autoComplete="email"
+                        className="rounded-sm"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={loginForm.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        autoComplete="current-password"
+                        className="rounded-sm"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full bg-green-light! text-white rounded-sm"
+                disabled={loginMutation.isPending}
+              >
                 {loginMutation.isPending ? 'Signing in...' : 'Sign in'}
               </Button>
-              <p className="text-sm text-muted-foreground text-center">Don&apos;t have an account?{' '}<button type="button" onClick={() => setView('register')} className="font-medium text-foreground underline underline-offset-4 cursor-pointer">Sign up</button></p>
+              <p className="text-sm text-muted-foreground text-center">
+                Don&apos;t have an account?{' '}
+                <button
+                  type="button"
+                  onClick={() => setView('register')}
+                  className="font-medium text-foreground underline underline-offset-4 cursor-pointer"
+                >
+                  Sign up
+                </button>
+              </p>
             </form>
           </Form>
         ) : (
           <Form {...registerForm}>
-            <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4 py-2">
-              <FormField control={registerForm.control} name="name" render={({ field }) => (
-                <FormItem><FormLabel>Name</FormLabel><FormControl><Input placeholder="Your name" autoComplete="name" className="rounded-sm" {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
-              <FormField control={registerForm.control} name="email" render={({ field }) => (
-                <FormItem><FormLabel>Email</FormLabel><FormControl><Input placeholder="name@example.com" type="email" autoComplete="email" className="rounded-sm" {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
-              <FormField control={registerForm.control} name="password" render={({ field }) => (
-                <FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" autoComplete="new-password" className="rounded-sm" {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
-              <Button type="submit" size="lg" className="w-full rounded-sm bg-green-light! text-white" disabled={registerMutation.isPending}>
-                {registerMutation.isPending ? 'Creating account...' : 'Create account'}
+            <form
+              onSubmit={registerForm.handleSubmit(onRegisterSubmit)}
+              className="space-y-4 py-2"
+            >
+              <FormField
+                control={registerForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Your name"
+                        autoComplete="name"
+                        className="rounded-sm"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={registerForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="name@example.com"
+                        type="email"
+                        autoComplete="email"
+                        className="rounded-sm"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={registerForm.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        autoComplete="new-password"
+                        className="rounded-sm"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full rounded-sm bg-green-light! text-white"
+                disabled={registerMutation.isPending}
+              >
+                {registerMutation.isPending
+                  ? 'Creating account...'
+                  : 'Create account'}
               </Button>
-              <p className="text-sm text-muted-foreground text-center">Already have an account?{' '}<button type="button" onClick={() => setView('login')} className="font-medium text-foreground underline underline-offset-4 cursor-pointer">Sign in</button></p>
+              <p className="text-sm text-muted-foreground text-center">
+                Already have an account?{' '}
+                <button
+                  type="button"
+                  onClick={() => setView('login')}
+                  className="font-medium text-foreground underline underline-offset-4 cursor-pointer"
+                >
+                  Sign in
+                </button>
+              </p>
             </form>
           </Form>
         )}

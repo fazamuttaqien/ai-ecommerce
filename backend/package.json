@@ -2,7 +2,7 @@
   "name": "backend",
   "version": "1.0.0",
   "main": "index.js",
-  "type": "commonjs",
+  "type": "module",
   "scripts": {
     "dev": "nodemon",
     "build": "tsup src/index.ts --format cjs --out-dir dist && cp ./package.json ./dist",
