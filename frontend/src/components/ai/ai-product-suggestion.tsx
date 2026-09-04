@@ -22,7 +22,8 @@ const formatPrice = (price?: number) => {
 export const AIProductSuggestion = ({ product }: AIProductSuggestionProps) => {
   const navigate = useNavigate()
   const hasValidSlug = Boolean(product.slug?.trim())
-  const isOutOfStock = typeof product.stockCount === 'number' && product.stockCount <= 0
+  const isOutOfStock =
+    typeof product.stockCount === 'number' && product.stockCount <= 0
   const salePrice = formatPrice(product.salePrice)
   const originalPrice = formatPrice(product.originalPrice)
   const hasDiscount =
@@ -78,7 +79,9 @@ export const AIProductSuggestion = ({ product }: AIProductSuggestionProps) => {
           </p>
 
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-            {salePrice && <span className="text-base font-semibold">{salePrice}</span>}
+            {salePrice && (
+              <span className="text-base font-semibold">{salePrice}</span>
+            )}
             {hasDiscount && originalPrice && (
               <span className="text-xs text-muted-foreground line-through">
                 {originalPrice}
@@ -86,16 +89,20 @@ export const AIProductSuggestion = ({ product }: AIProductSuggestionProps) => {
             )}
           </div>
 
-          {typeof product.discountPercent === 'number' && product.discountPercent > 0 && (
-            <p className="text-xs font-medium text-green-light">
-              {product.discountPercent}% off
-            </p>
-          )}
+          {typeof product.discountPercent === 'number' &&
+            product.discountPercent > 0 && (
+              <p className="text-xs font-medium text-green-light">
+                {product.discountPercent}% off
+              </p>
+            )}
 
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             {typeof product.ratingAverage === 'number' && (
               <span className="inline-flex items-center gap-1">
-                <Star className="size-3.5 fill-current text-secondary" aria-hidden="true" />
+                <Star
+                  className="size-3.5 fill-current text-secondary"
+                  aria-hidden="true"
+                />
                 {product.ratingAverage.toFixed(1)}
               </span>
             )}

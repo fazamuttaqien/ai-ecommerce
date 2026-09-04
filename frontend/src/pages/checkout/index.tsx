@@ -22,7 +22,7 @@ import {
   PackageCheck,
   ShoppingCart,
 } from 'lucide-react'
-import { useMemo, useState, useEffect, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import AddressSection from './components/address-section'
 import OrderSummary from './components/order-summary'
@@ -54,24 +54,44 @@ const CheckoutPage = () => {
     queryKey: ['addresses'],
     queryFn: getAddressesQueryFn,
   })
-  const addresses = addressData?.addresses || []
+  // const addresses = addressData?.addresses || []
+  const addresses = useMemo(
+    () => addressData?.addresses ?? [],
+    [addressData?.addresses],
+  )
 
   // Auto-select default address if available
-  useEffect(() => {
-    if (addresses.length > 0 && !selectedAddressId) {
-      const defaultAddress = addresses.find((a) => a.isDefault)
-      if (defaultAddress) {
-        setSelectedAddressId(defaultAddress._id)
-      } else {
-        setSelectedAddressId(addresses[0]._id)
+  // useEffect(() => {
+  //   if (addresses.length > 0 && !selectedAddressId) {
+  //     const defaultAddress = addresses.find((a) => a.isDefault)
+  //     if (defaultAddress) {
+  //       setSelectedAddressId(defaultAddress._id)
+  //     } else {
+  //       setSelectedAddressId(addresses[0]._id)
+  //     }
+  //   }
+  // }, [addresses, selectedAddressId])
+
+  // const selectedAddress = useMemo(
+  //   () => addresses.find((address) => address._id === selectedAddressId),
+  //   [addresses, selectedAddressId],
+  // )
+
+  const selectedAddress = useMemo(() => {
+    if (selectedAddressId) {
+      const selected = addresses.find(
+        (address) => address._id === selectedAddressId,
+      )
+
+      if (selected) {
+        return selected
       }
     }
+
+    return addresses.find((address) => address.isDefault) ?? addresses[0]
   }, [addresses, selectedAddressId])
 
-  const selectedAddress = useMemo(
-    () => addresses.find((address) => address._id === selectedAddressId),
-    [addresses, selectedAddressId],
-  )
+  const effectiveSelectedAddressId = selectedAddress?._id ?? ''
 
   const createAddressMutation = useMutation({
     mutationFn: createAddressMutationFn,
@@ -116,10 +136,19 @@ const CheckoutPage = () => {
     setOpenPanel('review')
   }
 
+  // const handlePlaceOrder = () => {
+  //   if (!selectedAddressId || !paymentMethod) return
+  //   createOrderMutation.mutate({
+  //     addressId: selectedAddressId,
+  //     paymentMethod,
+  //   })
+  // }
+
   const handlePlaceOrder = () => {
-    if (!selectedAddressId || !paymentMethod) return
+    if (!effectiveSelectedAddressId || !paymentMethod) return
+
     createOrderMutation.mutate({
-      addressId: selectedAddressId,
+      addressId: effectiveSelectedAddressId,
       paymentMethod,
     })
   }
@@ -185,7 +214,7 @@ const CheckoutPage = () => {
           >
             <AddressSection
               addresses={addresses}
-              selectedAddressId={selectedAddressId}
+              selectedAddressId={effectiveSelectedAddressId}
               onSelectAddress={handleSelectAddress}
               onAddAddress={handleAddAddress}
               isAdding={createAddressMutation.isPending}

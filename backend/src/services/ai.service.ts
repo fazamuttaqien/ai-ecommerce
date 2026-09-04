@@ -47,7 +47,9 @@ export type AIChatResult = {
   products: Array<Record<string, unknown>>;
 };
 
-const extractRecommendedProducts = (steps: unknown[]): Array<Record<string, unknown>> => {
+const extractRecommendedProducts = (
+  steps: unknown[],
+): Array<Record<string, unknown>> => {
   const products: Array<Record<string, unknown>> = [];
   const seen = new Set<string>();
 
@@ -60,13 +62,23 @@ const extractRecommendedProducts = (steps: unknown[]): Array<Record<string, unkn
     for (const toolResult of toolResults) {
       if (!toolResult || typeof toolResult !== 'object') continue;
 
-      const value = toolResult as { toolName?: unknown; output?: unknown; result?: unknown };
-      if (value.toolName !== 'search_products' && value.toolName !== 'get_product') continue;
+      const value = toolResult as {
+        toolName?: unknown;
+        output?: unknown;
+        result?: unknown;
+      };
+      if (
+        value.toolName !== 'search_products' &&
+        value.toolName !== 'get_product'
+      )
+        continue;
 
       const output = value.output ?? value.result;
       if (!output || typeof output !== 'object') continue;
 
-      const candidateProducts = Array.isArray((output as { products?: unknown }).products)
+      const candidateProducts = Array.isArray(
+        (output as { products?: unknown }).products,
+      )
         ? (output as { products: unknown[] }).products
         : (output as { product?: unknown }).product
           ? [(output as { product: unknown }).product]
@@ -82,7 +94,9 @@ const extractRecommendedProducts = (steps: unknown[]): Array<Record<string, unkn
           _id: product._id,
           name: product.name,
           slug: product.slug,
-          image: Array.isArray(product.images) ? product.images[0] ?? null : null,
+          image: Array.isArray(product.images)
+            ? (product.images[0] ?? null)
+            : null,
           salePrice: product.salePrice,
           originalPrice: product.originalPrice,
           discountPercent: product.discountPercent,
@@ -139,7 +153,9 @@ export const generateAIChat = async (
     }
 
     return {
-      content: result.text.trim() || 'Maaf, saya belum dapat memberikan jawaban saat ini.',
+      content:
+        result.text.trim() ||
+        'Maaf, saya belum dapat memberikan jawaban saat ini.',
       products: extractRecommendedProducts(steps),
     };
   } catch (error) {

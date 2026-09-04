@@ -62,7 +62,9 @@ const createGroqProvider = (): AIProvider => {
   const validation = validateAIConfig();
 
   if (!validation.valid) {
-    throw new Error(`AI configuration is invalid: ${validation.errors.join('; ')}`);
+    throw new Error(
+      `AI configuration is invalid: ${validation.errors.join('; ')}`,
+    );
   }
 
   const provider = createGroq({ apiKey: envConfig.GROQ_API_KEY });

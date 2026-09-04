@@ -17,7 +17,10 @@ const Footer = () => {
               Shop fresh groceries, pantry staples, and everyday essentials.
             </p>
           </div>
-          <Button asChild className="mt-3 h-11 rounded-sm px-8 text-base bg-blue-500">
+          <Button
+            asChild
+            className="mt-3 h-11 rounded-sm px-8 text-base bg-blue-500"
+          >
             <Link to={PUBLIC_ROUTES.PRODUCTS}>View all products</Link>
           </Button>
         </div>

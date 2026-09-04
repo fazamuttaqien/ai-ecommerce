@@ -40,10 +40,7 @@ export const AIChatWidget = () => {
       )}
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent
-          side="right"
-          className="w-full gap-0 p-0 sm:max-w-md"
-        >
+        <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-md">
           <SheetHeader className="border-b pr-12">
             <SheetTitle className="flex items-center gap-2">
               <span className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -60,21 +57,34 @@ export const AIChatWidget = () => {
             <div className="flex min-h-full flex-col gap-3 p-4">
               {messages.length === 0 && !error ? (
                 <Card className="mt-auto mb-auto border-dashed p-4 text-center shadow-none">
-                  <Bot className="mx-auto mb-2 size-7 text-primary" aria-hidden="true" />
-                  <p className="text-sm font-medium">Ada yang bisa saya bantu?</p>
+                  <Bot
+                    className="mx-auto mb-2 size-7 text-primary"
+                    aria-hidden="true"
+                  />
+                  <p className="text-sm font-medium">
+                    Ada yang bisa saya bantu?
+                  </p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     Contoh: “Tampilkan buah yang murah dan masih tersedia.”
                   </p>
                 </Card>
               ) : (
                 messages.map((message, index) => (
-                  <div key={`${message.role}-${index}`} className="flex flex-col gap-2">
+                  <div
+                    key={`${message.role}-${index}`}
+                    className="flex flex-col gap-2"
+                  >
                     <AIChatMessage message={message} />
-                    {message.role === 'assistant' && message.products?.length ? (
+                    {message.role === 'assistant' &&
+                    message.products?.length ? (
                       <div className="ml-9 grid min-w-0 gap-2">
                         {message.products.map((product, productIndex) => (
                           <AIProductSuggestion
-                            key={product._id ?? product.slug ?? `${index}-${productIndex}`}
+                            key={
+                              product._id ??
+                              product.slug ??
+                              `${index}-${productIndex}`
+                            }
                             product={product}
                           />
                         ))}

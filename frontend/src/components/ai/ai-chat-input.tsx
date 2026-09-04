@@ -9,7 +9,10 @@ type AIChatInputProps = {
   onSubmit: (content: string) => void | Promise<void>
 }
 
-export const AIChatInput = ({ disabled = false, onSubmit }: AIChatInputProps) => {
+export const AIChatInput = ({
+  disabled = false,
+  onSubmit,
+}: AIChatInputProps) => {
   const [value, setValue] = useState('')
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -22,7 +25,10 @@ export const AIChatInput = ({ disabled = false, onSubmit }: AIChatInputProps) =>
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-center gap-2 border-t p-3">
+    <form
+      onSubmit={handleSubmit}
+      className="flex items-center gap-2 border-t p-3"
+    >
       <Input
         value={value}
         onChange={(event) => setValue(event.target.value)}

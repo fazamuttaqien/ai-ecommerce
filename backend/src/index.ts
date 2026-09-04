@@ -17,7 +17,9 @@ import webhookRouter from './routes/webhook.route';
 const aiValidation = validateAIConfig();
 
 if (!aiValidation.valid) {
-  console.error(`[AI] Configuration invalid: ${aiValidation.errors.join('; ')}`);
+  console.error(
+    `[AI] Configuration invalid: ${aiValidation.errors.join('; ')}`,
+  );
 } else if (aiValidation.enabled) {
   console.log('[AI] Provider configuration loaded successfully');
 } else {

@@ -17,7 +17,7 @@ const AppLayout = () => {
     if (user) {
       fetchCart()
     }
-  }, [user])
+  }, [user, fetchCart])
 
   return (
     <div className="flex min-h-screen flex-col">

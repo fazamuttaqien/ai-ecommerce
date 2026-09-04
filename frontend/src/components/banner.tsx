@@ -1,14 +1,12 @@
 import { Truck, X, Zap } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 const BANNER_STORAGE_KEY = 'instant-promo-banner-dismissed'
 
 const Banner = () => {
-  const [isVisible, setIsVisible] = useState(false)
-
-  useEffect(() => {
-    setIsVisible(sessionStorage.getItem(BANNER_STORAGE_KEY) !== 'true')
-  }, [])
+  const [isVisible, setIsVisible] = useState(() => {
+    return sessionStorage.getItem(BANNER_STORAGE_KEY) !== 'true'
+  })
 
   const handleDismiss = () => {
     sessionStorage.setItem(BANNER_STORAGE_KEY, 'true')

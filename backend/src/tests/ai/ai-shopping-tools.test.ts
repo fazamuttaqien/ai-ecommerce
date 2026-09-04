@@ -132,7 +132,10 @@ async function testSorting(): Promise<void> {
     received = await captureProductQuery(query);
     return productsResult();
   };
-  await executeSearchProducts({ sort: 'highest-rating', limit: 5 }, dependencies);
+  await executeSearchProducts(
+    { sort: 'highest-rating', limit: 5 },
+    dependencies,
+  );
   assert.equal(received?.sort, 'highest-rating');
   assert.equal(received?.limit, 5);
 }

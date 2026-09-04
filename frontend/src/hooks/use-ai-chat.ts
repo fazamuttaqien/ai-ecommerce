@@ -11,36 +11,44 @@ export const useAIChat = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const sendMessage = useCallback(async (content: string) => {
-    const trimmedContent = content.trim()
-    if (!trimmedContent || isLoading) return
+  const sendMessage = useCallback(
+    async (content: string) => {
+      const trimmedContent = content.trim()
+      if (!trimmedContent || isLoading) return
 
-    const userMessage: AIChatMessage = { role: 'user', content: trimmedContent }
-    const nextMessages = [...messages, userMessage]
-    const requestMessages = nextMessages.map(({ role, content: messageContent }) => ({
-      role,
-      content: messageContent,
-    }))
-
-    setMessages(nextMessages)
-    setError(null)
-    setIsLoading(true)
-
-    try {
-      const response = await postAIChat({ messages: requestMessages })
-      const assistantMessage: AIChatMessage = {
-        role: 'assistant',
-        content: response.data.content,
-        products: response.data.products ?? [],
+      const userMessage: AIChatMessage = {
+        role: 'user',
+        content: trimmedContent,
       }
+      const nextMessages = [...messages, userMessage]
+      const requestMessages = nextMessages.map(
+        ({ role, content: messageContent }) => ({
+          role,
+          content: messageContent,
+        }),
+      )
 
-      setMessages((current) => [...current, assistantMessage])
-    } catch {
-      setError(AI_UNAVAILABLE_MESSAGE)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [isLoading, messages])
+      setMessages(nextMessages)
+      setError(null)
+      setIsLoading(true)
+
+      try {
+        const response = await postAIChat({ messages: requestMessages })
+        const assistantMessage: AIChatMessage = {
+          role: 'assistant',
+          content: response.data.content,
+          products: response.data.products ?? [],
+        }
+
+        setMessages((current) => [...current, assistantMessage])
+      } catch {
+        setError(AI_UNAVAILABLE_MESSAGE)
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [isLoading, messages],
+  )
 
   return {
     messages,

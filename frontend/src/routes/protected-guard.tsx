@@ -1,6 +1,5 @@
 import Logo from '@/components/logo'
 import { Spinner } from '@/components/ui/spinner'
-//import { useUser } from "@/hooks/use-user";
 import { Navigate, Outlet } from 'react-router-dom'
 import { PUBLIC_ROUTES } from './route'
 import { useAuth } from '@/hooks/use-auth'

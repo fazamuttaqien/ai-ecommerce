@@ -1,11 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-// import { ArrowLeft, Sparkles } from 'lucide-react'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -28,10 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  getAllCategoriesQueryFn,
-  createProductMutationFn,
-} from '@/lib/api'
+import { getAllCategoriesQueryFn, createProductMutationFn } from '@/lib/api'
 import { calculateSalePrice } from '@/lib/utils'
 import ProductImageUploader from './components/product-image-uploader'
 
@@ -77,8 +73,11 @@ export default function AdminNewProductPage() {
     },
   })
 
-  const originalPrice = form.watch('originalPrice')
-  const discountPercent = form.watch('discountPercent')
+  const [originalPrice, discountPercent] = useWatch({
+    control: form.control,
+    name: [`originalPrice`, `discountPercent`],
+  })
+
   const salePrice = calculateSalePrice(originalPrice, discountPercent)
 
   const createMutation = useMutation({

@@ -199,8 +199,7 @@ export const executeGetProductReviews = async (
       reviews: result.reviews.map((review) => {
         const value = review as unknown as Record<string, unknown>;
         const user = value.userId as
-          | { name?: unknown; avatar?: unknown }
-          | undefined;
+          { name?: unknown; avatar?: unknown } | undefined;
         return {
           rating: value.rating,
           comment: value.comment,
@@ -208,7 +207,8 @@ export const executeGetProductReviews = async (
           user: user
             ? {
                 name: typeof user.name === 'string' ? user.name : undefined,
-                avatar: typeof user.avatar === 'string' ? user.avatar : undefined,
+                avatar:
+                  typeof user.avatar === 'string' ? user.avatar : undefined,
               }
             : null,
         };

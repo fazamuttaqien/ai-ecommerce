@@ -2,8 +2,6 @@ import {
   Route,
   createBrowserRouter,
   createRoutesFromElements,
-  ScrollRestoration,
-  Outlet,
 } from 'react-router-dom'
 import AppLayout from '@/layouts/app-layout'
 import AccountLayout from '@/layouts/account-layout'
@@ -15,13 +13,7 @@ import {
   adminRoutesPaths,
 } from './route'
 import ProtectedGuard from './protected-guard'
-
-const RootLayout = () => (
-  <>
-    <ScrollRestoration />
-    <Outlet />
-  </>
-)
+import RootLayout from './root-layout'
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
