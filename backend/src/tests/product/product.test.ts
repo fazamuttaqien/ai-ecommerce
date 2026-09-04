@@ -23,7 +23,6 @@ async function request(
 }
 
 let firstSlug = '';
-let totalProducts = 0;
 
 async function testGetProductsReturns200(): Promise<void> {
   const { status, body } = await request('GET', '/products?limit=5');
@@ -37,7 +36,6 @@ async function testGetProductsReturns200(): Promise<void> {
   if (!pagination || typeof pagination.total !== 'number')
     throw new Error('missing valid pagination');
 
-  totalProducts = pagination.total as number;
   firstSlug = products[0].slug as string;
   if (!firstSlug) throw new Error('product missing slug');
 }
