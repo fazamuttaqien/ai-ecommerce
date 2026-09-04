@@ -10,6 +10,10 @@ import type { GetProductsInput } from '../../validators/product.validator';
 
 type Dependencies = NonNullable<Parameters<typeof executeSearchProducts>[1]>;
 
+type ProductsResult = Awaited<ReturnType<Dependencies['getProducts']>>;
+type ProductResult = Awaited<ReturnType<Dependencies['getProductBySlug']>>;
+type ReviewsResult = Awaited<ReturnType<Dependencies['getProductReviews']>>;
+
 const product = {
   _id: 'product-1',
   name: 'Test Phone',
@@ -27,8 +31,8 @@ const product = {
   categoryId: { _id: 'category-1', name: 'Phones', slug: 'phones' },
 };
 
-const baseDependencies = (): Dependencies => ({
-  getProducts: async () => ({
+const productsResult = (): ProductsResult =>
+  ({
     products: [product],
     pagination: {
       page: 1,
@@ -38,9 +42,13 @@ const baseDependencies = (): Dependencies => ({
       hasNextPage: false,
       hasPrevPage: false,
     },
-  }),
-  getProductBySlug: async () => ({ product, relatedProducts: [] }),
-  getProductReviews: async () => ({
+  }) as ProductsResult;
+
+const productResult = (): ProductResult =>
+  ({ product, relatedProducts: [] }) as ProductResult;
+
+const reviewsResult = (): ReviewsResult =>
+  ({
     reviews: [
       {
         rating: 5,
@@ -58,7 +66,12 @@ const baseDependencies = (): Dependencies => ({
       hasNextPage: false,
       hasPrevPage: false,
     },
-  }),
+  }) as ReviewsResult;
+
+const baseDependencies = (): Dependencies => ({
+  getProducts: async () => productsResult(),
+  getProductBySlug: async () => productResult(),
+  getProductReviews: async () => reviewsResult(),
 });
 
 async function captureProductQuery(
@@ -72,7 +85,7 @@ async function testKeywordSearch(): Promise<void> {
   let received: GetProductsInput | undefined;
   dependencies.getProducts = async (query) => {
     received = await captureProductQuery(query);
-    return baseDependencies().getProducts(query);
+    return productsResult();
   };
   await executeSearchProducts({ keyword: 'phone' }, dependencies);
   assert.equal(received?.keyword, 'phone');
@@ -83,7 +96,7 @@ async function testPriceFilter(): Promise<void> {
   let received: GetProductsInput | undefined;
   dependencies.getProducts = async (query) => {
     received = await captureProductQuery(query);
-    return baseDependencies().getProducts(query);
+    return productsResult();
   };
   await executeSearchProducts({ minPrice: 50, maxPrice: 100 }, dependencies);
   assert.equal(received?.minPrice, 50);
@@ -95,7 +108,7 @@ async function testStockFilter(): Promise<void> {
   let received: GetProductsInput | undefined;
   dependencies.getProducts = async (query) => {
     received = await captureProductQuery(query);
-    return baseDependencies().getProducts(query);
+    return productsResult();
   };
   await executeSearchProducts({ inStock: true }, dependencies);
   assert.equal(received?.inStock, true);
@@ -106,7 +119,7 @@ async function testDiscountFilter(): Promise<void> {
   let received: GetProductsInput | undefined;
   dependencies.getProducts = async (query) => {
     received = await captureProductQuery(query);
-    return baseDependencies().getProducts(query);
+    return productsResult();
   };
   await executeSearchProducts({ hasDiscount: true }, dependencies);
   assert.equal(received?.hasDiscount, true);
@@ -117,7 +130,7 @@ async function testSorting(): Promise<void> {
   let received: GetProductsInput | undefined;
   dependencies.getProducts = async (query) => {
     received = await captureProductQuery(query);
-    return baseDependencies().getProducts(query);
+    return productsResult();
   };
   await executeSearchProducts({ sort: 'highest-rating', limit: 5 }, dependencies);
   assert.equal(received?.sort, 'highest-rating');
@@ -129,7 +142,7 @@ async function testProductDetail(): Promise<void> {
   let slug = '';
   dependencies.getProductBySlug = async (query) => {
     slug = query.slug;
-    return { product, relatedProducts: [] };
+    return productResult();
   };
   const result = await executeGetProduct({ slug: 'test-phone' }, dependencies);
   assert.equal(slug, 'test-phone');
@@ -151,9 +164,9 @@ async function testReviews(): Promise<void> {
 async function testInvalidInput(): Promise<void> {
   const dependencies = baseDependencies();
   let called = false;
-  dependencies.getProducts = async (query) => {
+  dependencies.getProducts = async () => {
     called = true;
-    return baseDependencies().getProducts(query);
+    return productsResult();
   };
   await assert.rejects(executeSearchProducts({ limit: 999 }, dependencies));
   assert.equal(called, false);
