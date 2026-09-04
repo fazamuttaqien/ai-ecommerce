@@ -86,3 +86,83 @@ export type ReviewsResponseType = {
     totalPages: number
   }
 }
+
+export type ReviewableOrderItemType = {
+  _id: string
+  productId: string
+  name: string
+  image: string
+  originalPrice: number
+  discountPercent: number
+  salePrice: number
+  quantity: number
+  isReviewed: boolean
+}
+
+export type ReviewableOrderType = {
+  _id: string
+  orderNo: string
+  createdAt: string
+  items: ReviewableOrderItemType[]
+}
+
+export type ReviewableOrdersResponseType = {
+  message: string
+  orders: ReviewableOrderType[]
+}
+
+export type CreateReviewResponseType = {
+  message: string
+  review: {
+    _id: string
+    userId: string
+    orderId: string
+    orderItemId: string
+    productId: string
+    rating: number
+    comment?: string
+    createdAt: string
+    updatedAt: string
+  }
+}
+
+export type AdminProductType = ProductType & {
+  description?: string
+  categoryId: {
+    _id: string
+    name: string
+    slug: string
+  }
+  isActive: boolean
+}
+
+export type AdminProductsResponseType = {
+  message: string
+  products: AdminProductType[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+    hasNextPage: boolean
+    hasPrevPage: boolean
+  }
+}
+
+export type CreateProductInputType = {
+  categoryId: string
+  name: string
+  description?: string
+  images: string[]
+  originalPrice: number
+  discountPercent?: number
+  discountLabel?: string | null
+  unit: string
+  stockCount?: number
+  isActive?: boolean
+}
+
+export type CreateProductResponseType = {
+  message: string
+  product: AdminProductType
+}
