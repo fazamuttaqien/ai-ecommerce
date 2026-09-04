@@ -19,9 +19,9 @@ export default defineConfig([
       globals: globals.browser,
     },
     rules: {
-      // 'react-refresh/only-export-components': 'off',
-      // 'react-hooks/exhaustive-deps': 'off',
-      // 'react-hooks/set-state-in-effect': 'off',
+      // UI components from shadcn/radix intentionally export variants/hooks
+      // alongside components, which is incompatible with this Fast Refresh rule.
+      'react-refresh/only-export-components': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
     },
   },
