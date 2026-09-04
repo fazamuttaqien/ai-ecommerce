@@ -3,13 +3,13 @@ import { Spinner } from '@/components/ui/spinner'
 import { Navigate, Outlet } from 'react-router-dom'
 import { PUBLIC_ROUTES } from './route'
 import { useAuth } from '@/hooks/use-auth'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 
 const ProtectedGuard = () => {
   const openAuth = useAuth((state) => state.openAuth)
 
   const isLoading = false
-  const data = { name: 'John' }
+  const data = useMemo(() => ({ name: 'John' }), [])
 
   useEffect(() => {
     if (!isLoading && !data) {
