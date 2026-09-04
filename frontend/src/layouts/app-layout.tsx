@@ -3,6 +3,7 @@ import CartSheet from '@/components/cart-sheet'
 import Footer from '@/components/footer'
 import Nav from '@/components/nav'
 import { AuthDialog } from '@/components/auth-dialog'
+import { AIChatWidget } from '@/components/ai/ai-chat-widget'
 import { Outlet } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useUser } from '@/hooks/use-user'
@@ -28,6 +29,7 @@ const AppLayout = () => {
       <Footer />
       <CartSheet />
       <AuthDialog />
+      <AIChatWidget />
     </div>
   )
 }
