@@ -5,8 +5,7 @@
   "type": "commonjs",
   "scripts": {
     "dev": "nodemon",
-    "build-linux": "tsup src/index.ts --format cjs --out-dir dist && cp ./package.json ./dist",
-    "build-powershell": "tsup src/index.ts --format cjs --out-dir dist Copy-Item package.json dist",
+    "build": "tsup src/index.ts --format cjs --out-dir dist && cp ./package.json ./dist",
     "start": "node dist/index.js",
     "seed:categories": "ts-node --transpile-only src/seeds/category.seed.ts",
     "seed:products": "ts-node --transpile-only src/seeds/product.seed.ts",
