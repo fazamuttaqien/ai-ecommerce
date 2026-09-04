@@ -15,7 +15,7 @@ const seedProducts = async () => {
       {
         userId: '6a9979d3ae74de093758aa49',
         name: 'Fresh Apples',
-        categoryId: '6a99770406b9e03277341032',
+        categoryId: '',
         description: 'Crisp and juicy red apples',
         images: ['https://example.com/apple.jpg'],
         originalPrice: 4.99,
@@ -27,7 +27,7 @@ const seedProducts = async () => {
       {
         userId: '6a9979d3ae74de093758aa49',
         name: 'Organic Bananas',
-        categoryId: '6a99770406b9e03277341032',
+        categoryId: '',
         description: 'Sweet organic bananas',
         images: ['https://example.com/banana.jpg'],
         originalPrice: 3.49,
@@ -40,7 +40,7 @@ const seedProducts = async () => {
       {
         userId: '6a9979d3ae74de093758aa49',
         name: 'Whole Wheat Bread',
-        categoryId: '6a99770406b9e0327734102e',
+        categoryId: '',
         description: 'Freshly baked whole wheat bread',
         images: ['https://example.com/bread.jpg'],
         originalPrice: 2.99,
@@ -53,7 +53,7 @@ const seedProducts = async () => {
         userId: '6a9979d3ae74de093758aa49',
         name: 'Orange Juice',
         description: 'Fresh squeezed orange juice',
-        categoryId: '6a99770406b9e03277341032',
+        categoryId: '',
         images: ['https://example.com/juice.jpg'],
         originalPrice: 5.99,
         discountPercent: 15,
