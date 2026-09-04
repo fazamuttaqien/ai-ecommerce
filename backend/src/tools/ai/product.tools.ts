@@ -109,11 +109,27 @@ const toControlledToolError = (error: unknown, operation: string): Error => {
   return new Error(`${operation} failed. Please try again.`);
 };
 
+const parseToolInput = <T>(
+  schema: z.ZodType<T>,
+  rawInput: unknown,
+  operation: string,
+): T => {
+  try {
+    return schema.parse(rawInput);
+  } catch {
+    throw new Error(`${operation} received invalid arguments.`);
+  }
+};
+
 export const executeSearchProducts = async (
   rawInput: unknown,
   dependencies: ProductServiceDependencies = defaultDependencies,
 ) => {
-  const input = searchProductsInputSchema.parse(rawInput);
+  const input = parseToolInput(
+    searchProductsInputSchema,
+    rawInput,
+    'Product search',
+  );
   const serviceInput = getProductsSchema.parse({
     ...input,
     page: 1,
@@ -145,7 +161,11 @@ export const executeGetProduct = async (
   rawInput: unknown,
   dependencies: ProductServiceDependencies = defaultDependencies,
 ) => {
-  const input = getProductInputSchema.parse(rawInput) satisfies GetProductToolInput;
+  const input = parseToolInput(
+    getProductInputSchema,
+    rawInput,
+    'Product detail lookup',
+  );
   const serviceInput = { slug: input.slug } satisfies GetProductBySlugInput;
 
   try {
@@ -162,7 +182,11 @@ export const executeGetProductReviews = async (
   rawInput: unknown,
   dependencies: ProductServiceDependencies = defaultDependencies,
 ) => {
-  const input = getProductReviewsInputSchema.parse(rawInput) satisfies GetProductReviewsToolInput;
+  const input = parseToolInput(
+    getProductReviewsInputSchema,
+    rawInput,
+    'Product review lookup',
+  );
   const serviceInput = {
     slug: input.slug,
     page: input.page,
@@ -212,7 +236,8 @@ export const createAIShoppingTools = (
     execute: (input) => executeGetProduct(input, dependencies),
   }),
   get_product_reviews: tool({
-    description: 'Get reviews and rating summary for an active product by slug. Read-only.',
+    description:
+      'Get reviews and rating summary for an active product by slug. Read-only.',
     inputSchema: getProductReviewsInputSchema,
     execute: (input) => executeGetProductReviews(input, dependencies),
   }),
