@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { ArrowUp } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
