@@ -8,10 +8,21 @@ import { errorHandler } from './middlewares/errorHandler.middleware';
 import { envConfig } from './config/env.config';
 import { asyncHandler } from './middlewares/asyncHandler.middleware';
 import { connectDatabase } from './config/database.config';
+import { validateAIConfig } from './config/ai.config';
 
 import passport from './config/passport.config';
 import routes from './routes';
 import webhookRouter from './routes/webhook.route';
+
+const aiValidation = validateAIConfig();
+
+if (!aiValidation.valid) {
+  console.error(`[AI] Configuration invalid: ${aiValidation.errors.join('; ')}`);
+} else if (aiValidation.enabled) {
+  console.log('[AI] Provider configuration loaded successfully');
+} else {
+  console.log('[AI] Disabled');
+}
 
 const app = express();
 
