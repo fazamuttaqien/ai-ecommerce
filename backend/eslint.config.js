@@ -1,10 +1,10 @@
-import eslint from '@eslint/js';
-import eslintConfigPrettier from 'eslint-config-prettier';
-import globals from 'globals';
-import tseslint from 'typescript-eslint';
-import { defineConfig } from 'eslint/config';
+const eslint = require('@eslint/js');
+const eslintConfigPrettier = require('eslint-config-prettier');
+const globals = require('globals');
+const tseslint = require('typescript-eslint');
+const { defineConfig } = require('eslint/config');
 
-export default defineConfig([
+module.exports = defineConfig([
   {
     ignores: ['node_modules/', 'dist/', 'coverage/'],
   },
