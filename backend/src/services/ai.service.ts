@@ -10,19 +10,14 @@ import { HTTPSTATUS } from '../config/http.config';
 
 export const AI_CHAT_MAX_TOOL_ROUNDS = 5;
 
-export class AIServiceError extends Error {
+export class AIServiceError extends AppError {
   constructor(message = 'AI service is unavailable') {
-    super(message);
-    this.name = 'AIServiceError';
+    super(message, HTTPSTATUS.SERVICE_UNAVAILABLE, 'ERR_AI_UNAVAILABLE');
+    Object.setPrototypeOf(this, AIServiceError.prototype);
   }
 }
 
-export class AIServiceUnavailableError extends AppError {
-  constructor(message = 'AI Shopping Assistant is currently unavailable') {
-    super(message, HTTPSTATUS.SERVICE_UNAVAILABLE, 'ERR_AI_UNAVAILABLE');
-    Object.setPrototypeOf(this, AIServiceUnavailableError.prototype);
-  }
-}
+export class AIServiceUnavailableError extends AIServiceError {}
 
 /**
  * Provider-agnostic entry point for AI model access.
@@ -108,15 +103,21 @@ const toModelMessages = (input: AIChatInput): ModelMessage[] =>
 
 export const generateAIChat = async (
   input: AIChatInput,
-  model: LanguageModel | null = getAIModel(),
+  model?: LanguageModel | null,
 ): Promise<AIChatResult> => {
-  if (!aiConfig.enabled || !model) {
+  if (!aiConfig.enabled) {
     throw new AIServiceUnavailableError();
   }
 
   try {
+    const resolvedModel = model === undefined ? getAIModel() : model;
+
+    if (!resolvedModel) {
+      throw new AIServiceUnavailableError();
+    }
+
     const result = await generateText({
-      model,
+      model: resolvedModel,
       system: AI_SHOPPING_SYSTEM_PROMPT,
       messages: toModelMessages(input),
       tools: AI_SHOPPING_TOOLS,
@@ -132,7 +133,7 @@ export const generateAIChat = async (
       lastStep.toolCalls.length > 0 &&
       !result.text.trim()
     ) {
-      throw new AIServiceError('AI tool execution limit reached');
+      throw new AIServiceError();
     }
 
     return {
