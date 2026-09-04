@@ -1,8 +1,11 @@
+import type { OrderStatus } from '@/constants/orders'
+
 export type OrderItemType = {
   productId: string
   name: string
   image: string
   originalPrice: number
+  discountPercent?: number
   salePrice: number
   quantity: number
 }
@@ -20,7 +23,7 @@ export type OrderAddressSnapshot = {
 }
 
 export type OrderStatusHistoryType = {
-  status: string
+  status: OrderStatus
   note?: string
   date: string
 }
@@ -33,7 +36,7 @@ export type OrderType = {
   shippingAddress: OrderAddressSnapshot
   paymentMethod: string
   paymentStatus: string
-  status: string
+  status: OrderStatus
   statusHistory?: OrderStatusHistoryType[]
   subtotal: number
   deliveryFee: number
@@ -83,4 +86,24 @@ export type AdminOrdersResponse = {
   message: string
   orders: AdminOrderType[]
   pagination: AdminOrdersPagination
+}
+
+export type AdminAnalyticsResponse = {
+  message: string
+  totalSales: number
+  totalOrders: number
+  totalUsers: number
+  totalProducts: number
+  totalOutOfStock: number
+}
+
+export type UpdateOrderStatusInput = {
+  orderId: string
+  status: OrderStatus
+  note?: string
+}
+
+export type UpdateOrderStatusResponse = {
+  message: string
+  order: AdminOrderType
 }
