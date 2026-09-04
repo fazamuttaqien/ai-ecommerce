@@ -11,7 +11,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
-import { cn } from '@/lib/utils'
+import { cn, getErrorMessage } from '@/lib/utils'
 import { MessageSquareText, PackageCheck, Star } from 'lucide-react'
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -23,6 +23,10 @@ import {
 import { toast } from 'sonner'
 import { Link } from 'react-router-dom'
 import { Spinner } from '@/components/ui/spinner'
+import type {
+  ReviewType,
+  ReviewableOrderItemType,
+} from '@/types/products.type'
 
 const formatDate = (value: string) => {
   return new Intl.DateTimeFormat('en-US', {
@@ -32,16 +36,19 @@ const formatDate = (value: string) => {
   }).format(new Date(value))
 }
 
-type SubmittedEntry = {
-  _id: string
+type SubmittedEntry = ReviewType & {
   productId: {
     slug: string
     images: string[]
     name: string
   }
-  rating: number
-  comment: string
-  createdAt: string
+}
+
+type ReviewableEntry = {
+  item: ReviewableOrderItemType
+  orderId: string
+  orderNo: string
+  orderDate: string
 }
 
 const AccountReviewsPage = () => {
@@ -55,18 +62,19 @@ const AccountReviewsPage = () => {
     queryFn: getUserReviewsQueryFn,
   })
 
-  const reviewableList = (reviewableData?.orders || []).flatMap((order: any) =>
-    order.items
-      .filter((i: any) => !i.isReviewed)
-      .map((item: any) => ({
-        item: item,
-        orderId: order._id,
-        orderNo: order.orderNo,
-        orderDate: order.createdAt,
-      })),
+  const reviewableList: ReviewableEntry[] = (reviewableData?.orders ?? []).flatMap(
+    (order) =>
+      order.items
+        .filter((item) => !item.isReviewed)
+        .map((item) => ({
+          item,
+          orderId: order._id,
+          orderNo: order.orderNo,
+          orderDate: order.createdAt,
+        })),
   )
 
-  const submittedList = reviewsData?.reviews || []
+  const submittedList = (reviewsData?.reviews ?? []) as SubmittedEntry[]
 
   if (loadingReviewable || loadingReviews) {
     return (
@@ -117,7 +125,7 @@ const AccountReviewsPage = () => {
 
         <TabsContent value="to-review" className="flex flex-col gap-4">
           {reviewableList.length > 0 ? (
-            reviewableList.map((entry: any) => (
+            reviewableList.map((entry) => (
               <ReviewPromptCard
                 key={`${entry.orderId}-${entry.item._id}`}
                 item={entry.item}
@@ -143,7 +151,7 @@ const AccountReviewsPage = () => {
 
         <TabsContent value="reviewed" className="flex flex-col gap-4">
           {submittedList.length > 0 ? (
-            submittedList.map((review: any) => (
+            submittedList.map((review) => (
               <SubmittedReviewCard key={review._id} review={review} />
             ))
           ) : (
@@ -207,12 +215,7 @@ const ReviewPromptCard = ({
   orderDate,
   orderNo,
 }: {
-  item: {
-    _id: string
-    image: string
-    name: string
-    slug: string
-  }
+  item: ReviewableOrderItemType
   orderId: string
   orderNo: string
   orderDate: string
@@ -228,10 +231,8 @@ const ReviewPromptCard = ({
       queryClient.invalidateQueries({ queryKey: ['reviewable-items'] })
       queryClient.invalidateQueries({ queryKey: ['user-reviews'] })
     },
-    onError: (err: any) => {
-      const errMsg =
-        err.response?.data?.message || err.message || 'Failed to submit review'
-      toast.error(errMsg)
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, 'Failed to submit review'))
     },
   })
 
