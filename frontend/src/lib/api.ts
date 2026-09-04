@@ -22,6 +22,7 @@ import type {
   ReviewsResponseType,
 } from '@/types/products.type'
 import type { CartResponseType } from '@/types/cart.type'
+import type { AIChatRequest, AIChatResponse } from '@/types/ai.type'
 
 export const loginMutationFn = async (
   data: LoginType,
@@ -103,6 +104,13 @@ export const getProductReviewsQueryFn = async (
       params,
     },
   )
+  return response.data
+}
+
+export const postAIChat = async (
+  data: AIChatRequest,
+): Promise<AIChatResponse> => {
+  const response = await API.post<AIChatResponse>('/ai/chat', data)
   return response.data
 }
 
