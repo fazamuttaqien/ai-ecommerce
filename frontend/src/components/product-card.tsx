@@ -84,18 +84,18 @@ const ProductCard = ({
   return (
     <Card
       className={cn(
-        'relative gap-0 rounded-none bg-transparent shadow-none! p-0 ring-0 overflow-hidden',
+        'relative gap-0 rounded-sm bg-transparent shadow-none! p-0 ring-0 overflow-hidden',
         className,
       )}
     >
       {isOutofStock && (
-        <div className="absolute z-20 w-full h-5 text-center bg-destructive/70  text-white">
+        <div className="absolute z-20 w-full h-5 text-center bg-destructive/70 text-white">
           Out of Stock
         </div>
       )}
       <CardContent
         className={cn(
-          'relative  flex flex-col gap-1 p-0',
+          'relative flex flex-col gap-1 p-0',
           isOutofStock && 'opacity-50 cursor-not-allowed!',
         )}
       >
