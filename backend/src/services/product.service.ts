@@ -27,7 +27,6 @@ import {
 } from '../validators/product.validator';
 import { BadRequestException, NotFoundException } from '../utils/app-error';
 import { productEmbeddingService } from './product-embedding.service';
-import { buildProductEmbeddingText } from './product-embedding-text.service';
 
 const productListColumns = {
   _id: products._id,
@@ -124,24 +123,33 @@ export const updateProductService = async (productId: string, data: UpdateProduc
     if (!category) throw new BadRequestException('Category not found');
   }
 
-  const nextName = data.name ?? current.name;
-  const nextDescription = data.description ?? current.description;
-  const nextUnit = data.unit ?? current.unit;
-  const [nextCategory] = await db.select({ name: categories.name }).from(categories).where(eq(categories._id, nextCategoryId)).limit(1);
+  const semanticChanged =
+    data.name !== undefined ||
+    data.description !== undefined ||
+    data.unit !== undefined ||
+    data.categoryId !== undefined && data.categoryId !== current.categoryId;
 
-  const semanticChanged = buildProductEmbeddingText({ name: current.name, description: current.description, unit: current.unit, category: { name: undefined } as never }) !==
-    buildProductEmbeddingText({ name: nextName, description: nextDescription, unit: nextUnit, category: { name: nextCategory?.name } });
-
-  const updateData: Record<string, unknown> = { ...data, categoryId: nextCategoryId, updatedAt: new Date() };
-  if (data.name !== undefined) updateData.slug = slugify(data.name, { lower: true, strict: true });
-  if (data.originalPrice !== undefined || data.discountPercent !== undefined) {
-    const originalPrice = data.originalPrice ?? current.originalPrice;
-    const discountPercent = data.discountPercent ?? current.discountPercent;
-    updateData.salePrice = discountPercent > 0 ? calculateSalePrice(originalPrice, discountPercent) : originalPrice;
-  }
+  const updateData = {
+    ...data,
+    categoryId: nextCategoryId,
+    updatedAt: new Date(),
+    ...(data.name !== undefined
+      ? { slug: slugify(data.name, { lower: true, strict: true }) }
+      : {}),
+    ...(data.originalPrice !== undefined || data.discountPercent !== undefined
+      ? {
+          salePrice:
+            (data.discountPercent ?? current.discountPercent) > 0
+              ? calculateSalePrice(
+                  data.originalPrice ?? current.originalPrice,
+                  data.discountPercent ?? current.discountPercent,
+                )
+              : data.originalPrice ?? current.originalPrice,
+        }
+      : {}),
+  };
 
   const [updated] = await db.update(products).set(updateData).where(eq(products._id, productId)).returning();
-
   if (semanticChanged) await productEmbeddingService.generate(productId);
   return updated;
 };
@@ -150,8 +158,7 @@ export const deleteProductService = async (productId: string) => {
   if (!isValidId(productId)) throw new BadRequestException('Invalid product ID');
   const [deleted] = await db.delete(products).where(eq(products._id, productId)).returning({ _id: products._id });
   if (!deleted) throw new NotFoundException('Product not found');
-  // DB FK cascade removes product_embeddings. Explicit deletion is intentionally
-  // unnecessary and avoids duplicating the database's ownership rule.
+  // product_embeddings has ON DELETE CASCADE on product_id.
   return deleted;
 };
 
