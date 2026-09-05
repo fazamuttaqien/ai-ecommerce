@@ -5,11 +5,13 @@ import {
   getProductBySlugController,
   getProductReviewsController,
 } from '../controllers/product.controller';
+import { semanticSearchController } from '../controllers/semantic-search.controller';
 
 const productRoutes: Router = Router();
 
 productRoutes.get('/', getProductsController);
 productRoutes.get('/deals', getDealsController);
+productRoutes.get('/semantic-search', semanticSearchController);
 productRoutes.get('/:slug/reviews', getProductReviewsController);
 productRoutes.get('/:slug', getProductBySlugController);
 
