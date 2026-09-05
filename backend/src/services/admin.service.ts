@@ -1,6 +1,6 @@
-import OrderModel from '../models/order.model';
-import UserModel from '../models/user.model';
-import ProductModel from '../models/product.model';
+import { count, desc, eq, lte, sum } from 'drizzle-orm';
+import { db } from '../db';
+import { orders, orderItems, products, users } from '../db/schema';
 import { ORDER_STATUS, PAYMENT_STATUS } from '../constants/enums';
 import {
   GetAdminOrdersInput,
@@ -8,6 +8,12 @@ import {
   UpdateOrderStatusParamsInput,
 } from '../validators/admin.validator';
 import { NotFoundException } from '../utils/app-error';
+
+type StatusHistoryEntry = {
+  status: string;
+  note?: string;
+  date: Date | string;
+};
 
 export const getAdminAnalyticsService = async () => {
   const [
@@ -17,24 +23,24 @@ export const getAdminAnalyticsService = async () => {
     outOfStockProducts,
     totalSalesResult,
   ] = await Promise.all([
-    OrderModel.countDocuments(),
-    UserModel.countDocuments(),
-    ProductModel.countDocuments(),
-    ProductModel.countDocuments({ stockCount: { $lte: 0 } }),
-    OrderModel.aggregate([
-      { $match: { paymentStatus: PAYMENT_STATUS.PAID } },
-      { $group: { _id: null, total: { $sum: '$total' } } },
-    ]),
+    db.select({ count: count() }).from(orders),
+    db.select({ count: count() }).from(users),
+    db.select({ count: count() }).from(products),
+    db
+      .select({ count: count() })
+      .from(products)
+      .where(lte(products.stockCount, 0)),
+    db
+      .select({ total: sum(orders.total) })
+      .from(orders)
+      .where(eq(orders.paymentStatus, PAYMENT_STATUS.PAID)),
   ]);
-
-  const totalSales = totalSalesResult[0]?.total ?? 0;
-
   return {
-    totalSales,
-    totalOrders,
-    totalUsers,
-    totalProducts,
-    totalOutOfStock: outOfStockProducts,
+    totalSales: Number(totalSalesResult[0]?.total ?? 0),
+    totalOrders: totalOrders[0]?.count ?? 0,
+    totalUsers: totalUsers[0]?.count ?? 0,
+    totalProducts: totalProducts[0]?.count ?? 0,
+    totalOutOfStock: outOfStockProducts[0]?.count ?? 0,
   };
 };
 
@@ -42,31 +48,38 @@ export const getAdminOrdersService = async ({
   page,
   limit,
 }: GetAdminOrdersInput) => {
-  const skip = (page - 1) * limit;
-
-  const [orders, total] = await Promise.all([
-    OrderModel.find()
-      .populate('userId', 'name email')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean(),
-    OrderModel.countDocuments(),
+  const offset = (page - 1) * limit;
+  const [orderRows, totalRows] = await Promise.all([
+    db
+      .select({ order: orders, user: { name: users.name, email: users.email } })
+      .from(orders)
+      .leftJoin(users, eq(orders.userId, users._id))
+      .orderBy(desc(orders.createdAt))
+      .offset(offset)
+      .limit(limit),
+    db.select({ total: count() }).from(orders),
   ]);
-
+  const result = await Promise.all(
+    orderRows.map(async ({ order, user }) => ({
+      ...order,
+      user,
+      items: await db
+        .select()
+        .from(orderItems)
+        .where(eq(orderItems.orderId, order._id)),
+    })),
+  );
+  const total = totalRows[0]?.total ?? 0;
   const totalPages = Math.ceil(total / limit);
-  const hasNextPage = page < totalPages;
-  const hasPrevPage = page > 1;
-
   return {
-    orders,
+    orders: result,
     pagination: {
       page,
       limit,
       total,
       totalPages,
-      hasNextPage,
-      hasPrevPage,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
     },
   };
 };
@@ -75,32 +88,41 @@ export const updateOrderStatusService = async (
   params: UpdateOrderStatusParamsInput,
   body: UpdateOrderStatusBodyInput,
 ) => {
-  const order = await OrderModel.findById(params.id);
-
+  const [order] = await db
+    .select()
+    .from(orders)
+    .where(eq(orders._id, params.id))
+    .limit(1);
   if (!order) throw new NotFoundException('Order not found');
-
-  const statusExistsInHistory = order.statusHistory.some(
-    (entry) => entry.status === body.status,
-  );
-
-  if (!statusExistsInHistory) {
-    order.statusHistory.push({
-      status: body.status as any,
+  const statusHistory = [
+    ...((order.statusHistory as StatusHistoryEntry[]) ?? []),
+  ];
+  if (!statusHistory.some((entry) => entry.status === body.status))
+    statusHistory.push({
+      status: body.status,
       note: body.note || `Status updated to ${body.status} by admin`,
       date: new Date(),
     });
-  }
-
-  order.status = body.status as any;
-
-  if (
-    order.status === ORDER_STATUS.DELIVERED &&
+  const nextStatus =
+    body.status as (typeof ORDER_STATUS)[keyof typeof ORDER_STATUS];
+  const nextPaymentStatus =
+    nextStatus === ORDER_STATUS.DELIVERED &&
     order.paymentStatus !== PAYMENT_STATUS.PAID
-  ) {
-    order.paymentStatus = PAYMENT_STATUS.PAID;
-  }
-
-  await order.save();
-
-  return { order };
+      ? PAYMENT_STATUS.PAID
+      : order.paymentStatus;
+  const [updated] = await db
+    .update(orders)
+    .set({
+      status: nextStatus,
+      paymentStatus: nextPaymentStatus,
+      statusHistory,
+      updatedAt: new Date(),
+    })
+    .where(eq(orders._id, params.id))
+    .returning();
+  const items = await db
+    .select()
+    .from(orderItems)
+    .where(eq(orderItems.orderId, params.id));
+  return { order: { ...updated, items } };
 };

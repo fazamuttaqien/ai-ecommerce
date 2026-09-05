@@ -1,12 +1,15 @@
 import 'dotenv/config';
-import mongoose from 'mongoose';
-import ProductModel from '../models/product.model';
-import CategoryModel from '../models/category.model';
-import { envConfig } from '../config/env.config';
+import bcrypt from 'bcryptjs';
+import slugify from 'slugify';
 
-const USER_ID = '6a9ac1fd9aec4bee6ca47096';
+import { eq, inArray } from 'drizzle-orm';
+import { db } from '../db';
+import { categories, products, users } from '../db/schema';
 
-const products = [
+const ADMIN_EMAIL = 'admin@example.com';
+const ADMIN_PASSWORD = 'Admin123!';
+
+const productsData = [
   [
     'Fresh Red Apples',
     'Fruits & Vegetables',
@@ -550,16 +553,47 @@ const products = [
 
 const seedProducts = async () => {
   try {
-    await mongoose.connect(envConfig.MONGO_URI);
-    console.log('Database connected');
+    const existingAdmin = await db
+      .select({ id: users._id })
+      .from(users)
+      .where(eq(users.email, ADMIN_EMAIL))
+      .limit(1);
 
-    const categoryNames = [...new Set(products.map((product) => product[1]))];
-    const categoryDocuments = await CategoryModel.find({
-      name: { $in: categoryNames },
-    }).select('_id name');
+    let adminId = existingAdmin[0]?.id;
+
+    if (!adminId) {
+      const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, 12);
+
+      const [admin] = await db
+        .insert(users)
+        .values({
+          name: 'Admin',
+          email: ADMIN_EMAIL,
+          password: hashedPassword,
+          role: 'admin',
+        })
+        .returning({ id: users._id });
+
+      adminId = admin.id;
+      console.log(`Admin created: ${ADMIN_EMAIL}`);
+    } else {
+      console.log(`Admin already exists: ${ADMIN_EMAIL}`);
+    }
+
+    const categoryNames = [
+      ...new Set(productsData.map((product) => product[1])),
+    ];
+
+    const categoryRows = await db
+      .select({
+        id: categories._id,
+        name: categories.name,
+      })
+      .from(categories)
+      .where(inArray(categories.name, categoryNames));
 
     const categoryMap = new Map(
-      categoryDocuments.map((category) => [category.name, category._id]),
+      categoryRows.map((category) => [category.name, category.id]),
     );
 
     const missingCategories = categoryNames.filter(
@@ -572,10 +606,10 @@ const seedProducts = async () => {
       );
     }
 
-    await ProductModel.deleteMany({});
+    await db.delete(products);
     console.log('Existing products cleared');
 
-    const productDocuments = products.map(
+    const productRows = productsData.map(
       ([
         name,
         category,
@@ -586,32 +620,42 @@ const seedProducts = async () => {
         stockCount,
         unit,
         isActive,
-      ]) => ({
-        userId: new mongoose.Types.ObjectId(USER_ID),
-        categoryId: categoryMap.get(category)!,
-        name,
-        description,
-        images: [image],
-        originalPrice,
-        discountPercent,
-        ...(discountPercent > 0
-          ? { discountLabel: `${discountPercent}% OFF` }
-          : {}),
-        stockCount,
-        unit,
-        isActive,
-        ratingAverage: 0,
-        reviewCount: 0,
-      }),
+      ]) => {
+        const categoryId = categoryMap.get(category);
+
+        if (!categoryId) {
+          throw new Error(`Category not found: ${category}`);
+        }
+
+        return {
+          userId: adminId,
+          categoryId,
+          name,
+          slug: slugify(name, { lower: true, strict: true }),
+          description,
+          images: [image],
+          originalPrice,
+          salePrice: originalPrice * (1 - discountPercent / 100),
+          discountPercent,
+          discountLabel: discountPercent > 0 ? `${discountPercent}% OFF` : null,
+          stockCount,
+          unit,
+          isActive,
+          ratingAverage: 0,
+          reviewCount: 0,
+        };
+      },
     );
 
-    const created = await ProductModel.insertMany(productDocuments);
-    console.log(`${created.length} products seeded successfully`);
+    const created = await db
+      .insert(products)
+      .values(productRows)
+      .returning({ id: products._id });
 
-    process.exit(0);
+    console.log(`${created.length} products seeded successfully`);
   } catch (error) {
     console.error('Seed failed:', error);
-    process.exit(1);
+    process.exitCode = 1;
   }
 };
 

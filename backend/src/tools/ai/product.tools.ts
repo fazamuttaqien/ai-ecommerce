@@ -98,7 +98,7 @@ const mapProduct = (product: Record<string, unknown>) => ({
   stockCount: product.stockCount,
   ratingAverage: product.ratingAverage,
   reviewCount: product.reviewCount,
-  category: mapCategory(product.categoryId),
+  category: mapCategory(product.category ?? product.categoryId),
 });
 
 const toControlledToolError = (error: unknown, operation: string): Error => {
@@ -198,7 +198,7 @@ export const executeGetProductReviews = async (
     return {
       reviews: result.reviews.map((review) => {
         const value = review as unknown as Record<string, unknown>;
-        const user = value.userId as
+        const user = (value.user ?? value.userId) as
           { name?: unknown; avatar?: unknown } | undefined;
         return {
           rating: value.rating,

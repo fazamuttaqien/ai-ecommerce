@@ -1,9 +1,12 @@
-import CategoryModel from '../models/category.model';
+import { asc, eq } from 'drizzle-orm';
+import { db } from '../db';
+import { categories } from '../db/schema';
 
 export const getCategoriesService = async () => {
-  const categories = await CategoryModel.find({ isActive: true })
-    .sort({ _id: 1 })
-    .lean();
-
-  return { categories };
+  const result = await db
+    .select()
+    .from(categories)
+    .where(eq(categories.isActive, true))
+    .orderBy(asc(categories.createdAt));
+  return { categories: result };
 };

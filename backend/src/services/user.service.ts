@@ -1,5 +1,17 @@
-import UserModel from '../models/user.model';
+import { eq } from 'drizzle-orm';
+import { db } from '../db';
+import { users } from '../db/schema';
 
 export const findUserById = async (id: string) => {
-  return UserModel.findById(id).select('-password');
+  const [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users._id, id))
+    .limit(1);
+
+  if (!user) return null;
+
+  const { password: _password, ...safeUser } = user;
+
+  return safeUser;
 };

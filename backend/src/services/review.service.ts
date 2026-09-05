@@ -1,7 +1,7 @@
-import mongoose from 'mongoose';
-import ReviewModel from '../models/review.model';
-import OrderModel from '../models/order.model';
-import ProductModel from '../models/product.model';
+import { and, count, desc, eq, sql } from 'drizzle-orm';
+import { db } from '../db';
+import { orderItems, orders, products, reviews } from '../db/schema';
+import { isValidId } from '../utils/id.util';
 import { CreateReviewInput } from '../validators/review.validator';
 import { BadRequestException, NotFoundException } from '../utils/app-error';
 import { ORDER_STATUS, PAYMENT_STATUS } from '../constants/enums';
@@ -12,129 +12,141 @@ export const createReviewService = async (
 ) => {
   const { orderId, orderItemId, rating, comment } = data;
 
-  if (
-    !mongoose.isValidObjectId(orderId) ||
-    !mongoose.isValidObjectId(orderItemId)
-  ) {
+  if (!isValidId(orderId) || !isValidId(orderItemId))
     throw new BadRequestException('Invalid order or item ID');
-  }
 
-  const order = await OrderModel.findOne({
-    _id: orderId,
-    userId,
-  });
-  if (!order) {
-    throw new NotFoundException('Order not found');
-  }
+  const [order] = await db
+    .select()
+    .from(orders)
+    .where(and(eq(orders._id, orderId), eq(orders.userId, userId)))
+    .limit(1);
+
+  if (!order) throw new NotFoundException('Order not found');
 
   if (
     order.status !== ORDER_STATUS.DELIVERED ||
     order.paymentStatus !== PAYMENT_STATUS.PAID
-  ) {
+  )
     throw new BadRequestException(
       'Order must be delivered and paid to leave a review',
     );
-  }
 
-  const orderItem = order.items.find(
-    (item) => item._id?.toString() === orderItemId,
-  );
-  if (!orderItem) {
+  const [orderItem] = await db
+    .select()
+    .from(orderItems)
+    .where(
+      and(eq(orderItems._id, orderItemId), eq(orderItems.orderId, orderId)),
+    )
+    .limit(1);
+
+  if (!orderItem)
     throw new NotFoundException('Order item not found in this order');
-  }
 
-  const existingReview = await ReviewModel.findOne({ orderItemId });
-  if (existingReview) {
+  const [existingReview] = await db
+    .select()
+    .from(reviews)
+    .where(eq(reviews.orderItemId, orderItemId))
+    .limit(1);
+
+  if (existingReview)
     throw new BadRequestException('You have already reviewed this item');
-  }
 
-  const session = await mongoose.startSession();
-
-  const review = await session.withTransaction(async () => {
-    const [created] = await ReviewModel.create(
-      [
-        {
-          userId,
-          orderId,
-          orderItemId,
-          productId: orderItem.productId,
-          rating,
-          comment,
-        },
-      ],
-      { session },
-    );
-
-    await OrderModel.updateOne(
-      { _id: orderId, 'items._id': orderItemId },
-      { $set: { 'items.$.isReviewed': true } },
-      { session },
-    );
-
-    const [aggResult] = await ReviewModel.aggregate([
-      { $match: { productId: orderItem.productId } },
-      {
-        $group: {
-          _id: null,
-          averageRating: { $avg: '$rating' },
-          totalReviews: { $sum: 1 },
-        },
-      },
-    ]).session(session);
-
-    const newAverage =
-      aggResult?.averageRating != null
-        ? Math.round(aggResult.averageRating * 10) / 10
-        : 0;
-    const newCount = aggResult?.totalReviews ?? 0;
-
-    await ProductModel.updateOne(
-      { _id: orderItem.productId },
-      {
-        $set: {
-          ratingAverage: newAverage,
-          reviewCount: newCount,
-        },
-      },
-      { session },
-    );
+  const review = await db.transaction(async (tx) => {
+    const [created] = await tx
+      .insert(reviews)
+      .values({
+        userId,
+        orderId,
+        orderItemId,
+        productId: orderItem.productId,
+        rating,
+        comment,
+      })
+      .returning();
+    await tx
+      .update(orderItems)
+      .set({ isReviewed: true })
+      .where(eq(orderItems._id, orderItemId));
+    const [agg] = await tx
+      .select({ average: sql<number>`avg(${reviews.rating})`, total: count() })
+      .from(reviews)
+      .where(eq(reviews.productId, orderItem.productId));
+    await tx
+      .update(products)
+      .set({
+        ratingAverage:
+          agg?.average != null ? Math.round(Number(agg.average) * 10) / 10 : 0,
+        reviewCount: agg?.total ?? 0,
+        updatedAt: new Date(),
+      })
+      .where(eq(products._id, orderItem.productId));
 
     return created;
   });
 
-  session.endSession();
-
-  if (!review) {
-    throw new BadRequestException('Failed to create review');
-  }
+  if (!review) throw new BadRequestException('Failed to create review');
 
   return { review };
 };
 
 export const getUserReviewsService = async (userId: string) => {
-  const reviews = await ReviewModel.find({ userId })
-    .populate('productId', 'name slug images')
-    .sort({ createdAt: -1 })
-    .lean();
+  const rows = await db
+    .select({
+      review: reviews,
+      product: {
+        name: products.name,
+        slug: products.slug,
+        images: products.images,
+      },
+    })
+    .from(reviews)
+    .leftJoin(products, eq(reviews.productId, products._id))
+    .where(eq(reviews.userId, userId))
+    .orderBy(desc(reviews.createdAt));
 
-  return { reviews };
+  return {
+    reviews: rows.map((row) => ({ ...row.review, product: row.product })),
+  };
 };
 
 export const getUserReviewableOrderItemsService = async (userId: string) => {
-  const orders = await OrderModel.find({
-    userId,
-    status: ORDER_STATUS.DELIVERED,
-    paymentStatus: PAYMENT_STATUS.PAID,
-    'items.isReviewed': false,
-  })
-    .sort({ createdAt: -1 })
-    .select('_id items orderNo createdAt')
-    .lean();
+  const orderRows = await db
+    .select()
+    .from(orders)
+    .where(
+      and(
+        eq(orders.userId, userId),
+        eq(orders.status, ORDER_STATUS.DELIVERED),
+        eq(orders.paymentStatus, PAYMENT_STATUS.PAID),
+      ),
+    )
+    .orderBy(desc(orders.createdAt));
 
-  const filteredOrders = orders.map((order) => ({
-    ...order,
-    items: order.items.filter((item) => item.isReviewed === false),
-  }));
+  const result = await Promise.all(
+    orderRows.map(async (order) => {
+      const items = await db
+        .select()
+        .from(orderItems)
+        .where(
+          and(
+            eq(orderItems.orderId, order._id),
+            eq(orderItems.isReviewed, false),
+          ),
+        );
+      return items.length
+        ? {
+            _id: order._id,
+            orderNo: order.orderNo,
+            createdAt: order.createdAt,
+            items,
+          }
+        : null;
+    }),
+  );
 
-  return { orders: filteredOrders };
+  return {
+    orders: result.filter(
+      (order): order is NonNullable<typeof order> => order !== null,
+    ),
+  };
 };
