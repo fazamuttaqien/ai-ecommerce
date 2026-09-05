@@ -15,6 +15,7 @@ const Logo = ({
         'text-[22px] font-semibold tracking-tight text-foreground',
         className,
       )}
+      style={{ fontFamily: "'Slabo 27px', serif" }}
     >
       E-Commerce
     </Link>
