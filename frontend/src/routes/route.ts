@@ -50,9 +50,21 @@ export const publicRoutesPaths = [
 export const protectedRoutesPaths = [
   { path: PROTECTED_ROUTES.CHECKOUT, element: CheckoutPage },
   { path: PROTECTED_ROUTES.ORDERS, element: OrdersPage, account: true },
-  { path: PROTECTED_ROUTES.ORDER_TRACKING, element: OrderTrackingPage, account: true },
-  { path: PROTECTED_ROUTES.ACCOUNT_REVIEWS, element: AccountReviewsPage, account: true },
-  { path: PROTECTED_ROUTES.ACCOUNT_ADDRESSES, element: AccountAddressesPage, account: true },
+  {
+    path: PROTECTED_ROUTES.ORDER_TRACKING,
+    element: OrderTrackingPage,
+    account: true,
+  },
+  {
+    path: PROTECTED_ROUTES.ACCOUNT_REVIEWS,
+    element: AccountReviewsPage,
+    account: true,
+  },
+  {
+    path: PROTECTED_ROUTES.ACCOUNT_ADDRESSES,
+    element: AccountAddressesPage,
+    account: true,
+  },
 ]
 
 export const adminRoutesPaths = [
