@@ -36,6 +36,29 @@ export const passportAuthenticateJwt = passport.authenticate('jwt', {
   session: false,
 });
 
+const setGuestCartContext = (req: Request, res: Response) => {
+  const guestCartId =
+    req.cookies?.instant_guest_cart_id ?? generateGuestCartId();
+
+  req.user = undefined;
+  req.guestCartId = guestCartId;
+
+  if (!req.cookies?.instant_guest_cart_id) {
+    setGuestCartCookie(res, guestCartId);
+  }
+};
+
+const isJwtAuthenticationError = (error: unknown) => {
+  if (!error || typeof error !== 'object') return false;
+
+  const name = (error as { name?: string }).name;
+  return (
+    name === 'JsonWebTokenError' ||
+    name === 'TokenExpiredError' ||
+    name === 'NotBeforeError'
+  );
+};
+
 export const optionalCartAuth = (
   req: Request,
   res: Response,
@@ -44,34 +67,34 @@ export const optionalCartAuth = (
   const token = req?.cookies?.instant_access_token;
 
   if (!token) {
-    const guestCartId =
-      req?.cookies?.instant_guest_cart_id ?? generateGuestCartId();
-    req.user = undefined;
-    req.guestCartId = guestCartId;
-    if (!req.cookies?.instant_guest_cart_id) {
-      setGuestCartCookie(res, guestCartId);
-    }
+    setGuestCartContext(req, res);
     return next();
   }
 
-  passport.authenticate('jwt', { session: false }, (err: unknown, user: Express.User | false | null) => {
-    if (err) {
-      return next(err);
-    }
+  passport.authenticate(
+    'jwt',
+    { session: false },
+    (err: unknown, user: Express.User | false | null) => {
+      if (err) {
+        // An expired/malformed JWT means the customer is simply unauthenticated.
+        // It must fall back to the guest cart instead of becoming a 500 response.
+        if (isJwtAuthenticationError(err)) {
+          setGuestCartContext(req, res);
+          return next();
+        }
 
-    if (user) {
-      req.user = user;
-      req.guestCartId = null;
+        // Preserve real infrastructure/database errors from the JWT strategy.
+        return next(err);
+      }
+
+      if (user) {
+        req.user = user;
+        req.guestCartId = null;
+        return next();
+      }
+
+      setGuestCartContext(req, res);
       return next();
-    }
-
-    const guestCartId =
-      req?.cookies?.instant_guest_cart_id ?? generateGuestCartId();
-    req.user = undefined;
-    req.guestCartId = guestCartId;
-    if (!req.cookies?.instant_guest_cart_id) {
-      setGuestCartCookie(res, guestCartId);
-    }
-    return next();
-  })(req, res, next);
+    },
+  )(req, res, next);
 };
