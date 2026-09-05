@@ -55,7 +55,8 @@ const isJwtAuthenticationError = (error: unknown) => {
   return (
     name === 'JsonWebTokenError' ||
     name === 'TokenExpiredError' ||
-    name === 'NotBeforeError'
+    name === 'NotBeforeError' ||
+    name === 'UnauthorizedError'
   );
 };
 
@@ -76,14 +77,11 @@ export const optionalCartAuth = (
     { session: false },
     (err: unknown, user: Express.User | false | null) => {
       if (err) {
-        // An expired/malformed JWT means the customer is simply unauthenticated.
-        // It must fall back to the guest cart instead of becoming a 500 response.
         if (isJwtAuthenticationError(err)) {
           setGuestCartContext(req, res);
           return next();
         }
 
-        // Preserve real infrastructure/database errors from the JWT strategy.
         return next(err);
       }
 
@@ -94,6 +92,32 @@ export const optionalCartAuth = (
       }
 
       setGuestCartContext(req, res);
+      return next();
+    },
+  )(req, res, next);
+};
+
+export const optionalAuthStatus = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const token = req?.cookies?.instant_access_token;
+
+  if (!token) {
+    req.user = undefined;
+    return next();
+  }
+
+  passport.authenticate(
+    'jwt',
+    { session: false },
+    (err: unknown, user: Express.User | false | null) => {
+      if (err && !isJwtAuthenticationError(err)) {
+        return next(err);
+      }
+
+      req.user = user || undefined;
       return next();
     },
   )(req, res, next);
