@@ -11,7 +11,7 @@ const productRoutes: Router = Router();
 
 productRoutes.get('/', getProductsController);
 productRoutes.get('/deals', getDealsController);
-productRoutes.get('/semantic-search', semanticSearchController);
+productRoutes.get('/search/semantic', semanticSearchController);
 productRoutes.get('/:slug/reviews', getProductReviewsController);
 productRoutes.get('/:slug', getProductBySlugController);
 
