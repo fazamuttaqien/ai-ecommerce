@@ -1,8 +1,10 @@
 import { z } from 'zod';
 
+const MAX_QUERY_LENGTH = 500;
+
 export const semanticSearchSchema = z
   .object({
-    query: z.string().trim().min(1, 'Query is required'),
+    query: z.string().trim().min(1, 'Query is required').max(MAX_QUERY_LENGTH, `Query must not exceed ${MAX_QUERY_LENGTH} characters`),
     page: z.coerce.number().int().min(1).default(1),
     pageSize: z.coerce.number().int().min(1).max(100).default(20),
     categoryId: z.string().min(1).optional(),
