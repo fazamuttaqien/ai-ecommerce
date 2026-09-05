@@ -15,6 +15,7 @@
     "db:studio": "drizzle-kit studio",
     "test:ai-tools": "tsx src/tests/ai/ai-shopping-tools.test.ts",
     "test:ai-chat": "tsx src/tests/ai/ai-chat.test.ts",
+    "test:embedding": "tsx src/tests/embedding/gemini-embedding.test.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
