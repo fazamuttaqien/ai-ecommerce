@@ -2,7 +2,7 @@ import type { Category, Product } from '../db/schema';
 
 export type ProductEmbeddingData = Pick<
   Product,
-  'name' | 'description'
+  'name' | 'description' | 'unit'
 > & {
   category?: Pick<Category, 'name'> | null;
 };
@@ -23,6 +23,10 @@ export const buildProductEmbeddingText = (
 
   if (product.category?.name?.trim()) {
     sections.push(`Category: ${product.category.name.trim()}`);
+  }
+
+  if (product.unit?.trim()) {
+    sections.push(`Unit: ${product.unit.trim()}`);
   }
 
   return sections.join('\n');
