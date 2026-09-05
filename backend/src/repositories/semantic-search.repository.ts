@@ -1,4 +1,13 @@
-import { and, asc, count, eq, gte, lte, sql } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  cosineDistance,
+  count,
+  eq,
+  gte,
+  lte,
+  sql,
+} from 'drizzle-orm';
 
 import { embeddingConfig } from '../config/embedding.config';
 import { semanticSearchConfig } from '../config/semantic-search.config';
@@ -41,8 +50,10 @@ export class SemanticSearchRepository {
     pageSize: number,
   ): Promise<SemanticSearchRepositoryResponse> {
     const offset = (page - 1) * pageSize;
-    const queryVector = JSON.stringify(queryEmbedding);
-    const distance = sql<number>`${productEmbeddings.embedding} <=> ${queryVector}`;
+    const distance = cosineDistance(
+      productEmbeddings.embedding,
+      queryEmbedding,
+    );
     const similarity = sql<number>`1 - (${distance})`;
 
     const conditions = [
