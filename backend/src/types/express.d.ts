@@ -5,7 +5,6 @@ export type AuthUser = Omit<InferSelectModel<typeof users>, 'password'>;
 
 declare global {
   namespace Express {
-    // Required for Express's declaration merging; the lint rule incorrectly flags this interface as empty.
     // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     interface User extends AuthUser {}
 

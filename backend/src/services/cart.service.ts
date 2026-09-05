@@ -203,15 +203,13 @@ export const mergeGuestCartService = async (
     );
   await db.transaction(async (tx) => {
     await tx.delete(cartItems).where(eq(cartItems.cartId, userCart._id));
-    await tx
-      .insert(cartItems)
-      .values(
-        Array.from(merged, ([productId, quantity]) => ({
-          cartId: userCart._id,
-          productId,
-          quantity,
-        })),
-      );
+    await tx.insert(cartItems).values(
+      Array.from(merged, ([productId, quantity]) => ({
+        cartId: userCart._id,
+        productId,
+        quantity,
+      })),
+    );
     await tx.delete(carts).where(eq(carts._id, guestCart._id));
   });
 };

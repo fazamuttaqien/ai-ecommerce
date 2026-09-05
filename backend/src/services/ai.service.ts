@@ -35,7 +35,9 @@ export type AIChatResult = {
   products: Array<Record<string, unknown>>;
 };
 
-const extractRecommendedProducts = (steps: unknown[]): Array<Record<string, unknown>> => {
+const extractRecommendedProducts = (
+  steps: unknown[],
+): Array<Record<string, unknown>> => {
   const products: Array<Record<string, unknown>> = [];
   const seen = new Set<string>();
 
@@ -45,11 +47,21 @@ const extractRecommendedProducts = (steps: unknown[]): Array<Record<string, unkn
     if (!Array.isArray(toolResults)) continue;
     for (const toolResult of toolResults) {
       if (!toolResult || typeof toolResult !== 'object') continue;
-      const value = toolResult as { toolName?: unknown; output?: unknown; result?: unknown };
-      if (value.toolName !== 'search_products' && value.toolName !== 'get_product') continue;
+      const value = toolResult as {
+        toolName?: unknown;
+        output?: unknown;
+        result?: unknown;
+      };
+      if (
+        value.toolName !== 'search_products' &&
+        value.toolName !== 'get_product'
+      )
+        continue;
       const output = value.output ?? value.result;
       if (!output || typeof output !== 'object') continue;
-      const candidateProducts = Array.isArray((output as { products?: unknown }).products)
+      const candidateProducts = Array.isArray(
+        (output as { products?: unknown }).products,
+      )
         ? (output as { products: unknown[] }).products
         : (output as { product?: unknown }).product
           ? [(output as { product: unknown }).product]
@@ -64,7 +76,9 @@ const extractRecommendedProducts = (steps: unknown[]): Array<Record<string, unkn
           _id: product._id,
           name: product.name,
           slug: product.slug,
-          image: Array.isArray(product.images) ? product.images[0] ?? null : null,
+          image: Array.isArray(product.images)
+            ? (product.images[0] ?? null)
+            : null,
           salePrice: product.salePrice,
           originalPrice: product.originalPrice,
           stockCount: product.stockCount,
@@ -77,7 +91,10 @@ const extractRecommendedProducts = (steps: unknown[]): Array<Record<string, unkn
 };
 
 const toModelMessages = (input: AIChatInput): ModelMessage[] =>
-  input.messages.map((message) => ({ role: message.role, content: message.content }));
+  input.messages.map((message) => ({
+    role: message.role,
+    content: message.content,
+  }));
 
 export const generateAIChat = async (
   input: AIChatInput,
@@ -95,15 +112,21 @@ export const generateAIChat = async (
       stopWhen: stepCountIs(AI_CHAT_MAX_TOOL_ROUNDS),
     });
     const steps = Array.isArray(result.steps) ? result.steps : [];
-    const lastStep = steps.length > 0 ? steps[steps.length - 1] as { toolCalls?: unknown[] } : undefined;
+    const lastStep =
+      steps.length > 0
+        ? (steps[steps.length - 1] as { toolCalls?: unknown[] })
+        : undefined;
     if (
       steps.length >= AI_CHAT_MAX_TOOL_ROUNDS &&
       Array.isArray(lastStep?.toolCalls) &&
       lastStep.toolCalls.length > 0 &&
       !result.text.trim()
-    ) throw new AIServiceError();
+    )
+      throw new AIServiceError();
     return {
-      content: result.text.trim() || 'Maaf, saya belum dapat memberikan jawaban saat ini.',
+      content:
+        result.text.trim() ||
+        'Maaf, saya belum dapat memberikan jawaban saat ini.',
       products: extractRecommendedProducts(steps),
     };
   } catch (error) {
