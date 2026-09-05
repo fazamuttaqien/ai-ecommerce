@@ -58,32 +58,39 @@ const repositoryMock = {
   },
 };
 
-const service = new SemanticSearchService(embeddingMock, repositoryMock);
-const input: SemanticSearchInput = {
-  query: '  wireless headphones  ',
-  page: 2,
-  pageSize: 10,
-  categoryId: 'audio',
-  minPrice: 50,
-  maxPrice: 100,
+const run = async (): Promise<void> => {
+  const service = new SemanticSearchService(embeddingMock, repositoryMock);
+  const input: SemanticSearchInput = {
+    query: '  wireless headphones  ',
+    page: 2,
+    pageSize: 10,
+    categoryId: 'audio',
+    minPrice: 50,
+    maxPrice: 100,
+  };
+
+  const result = await service.search(input);
+
+  assert.deepEqual(embeddingMock.calls, ['wireless headphones']);
+  assert.deepEqual(repositoryInput, {
+    embedding: [1, 0, 0],
+    page: 2,
+    pageSize: 10,
+  });
+  assert.equal(result.items[0]?.similarity, 1);
+  assert.deepEqual(result.pagination, {
+    page: 2,
+    pageSize: 10,
+    total: 21,
+    totalPages: 3,
+    hasNextPage: true,
+    hasPreviousPage: true,
+  });
 };
 
-const result = await service.search(input);
-
-assert.deepEqual(embeddingMock.calls, ['wireless headphones']);
-assert.deepEqual(repositoryInput, {
-  embedding: [1, 0, 0],
-  page: 2,
-  pageSize: 10,
-});
-assert.equal(result.items[0]?.similarity, 1);
-assert.deepEqual(result.pagination, {
-  page: 2,
-  pageSize: 10,
-  total: 21,
-  totalPages: 3,
-  hasNextPage: true,
-  hasPreviousPage: true,
-});
-
-console.log('Semantic search service tests passed.');
+run()
+  .then(() => console.log('Semantic search service tests passed.'))
+  .catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
