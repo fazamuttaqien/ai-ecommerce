@@ -115,7 +115,7 @@ const ProductCard = ({
             <Button
               type="button"
               onClick={handleAddToCart}
-              className="absolute right-0 top-0 h-8 rounded-sm px-2.5 text-sm font-semibold bg-blue-500!"
+              className="absolute right-0 top-0 h-8 rounded-sm px-2.5 text-sm font-semibold bg-green-light!"
             >
               <Plus className="size-4" />
               {cartItem && cartItem.quantity > 0 ? (

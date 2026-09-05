@@ -40,7 +40,7 @@ const TodayDealsSection = () => {
   }
 
   return (
-    <section className="rounded-sm bg-blue-100 px-4 py-4">
+    <section className="rounded-sm px-4 py-4">
       <div className="flex flex-col gap-6">
         <div>
           <h2 className="text-xl font-semibold text-foreground md:text-2xl">

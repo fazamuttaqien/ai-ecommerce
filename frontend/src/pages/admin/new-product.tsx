@@ -129,7 +129,7 @@ export default function AdminNewProductPage() {
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_400px]">
             <div className="space-y-6">
-              <div className="space-y-4 rounded-sm border p-6 bg-gray-100">
+              <div className="space-y-4 rounded-sm border p-6">
                 <h3 className="text-sm font-medium">Basic Information</h3>
                 <FormField
                   control={form.control}
@@ -198,7 +198,7 @@ export default function AdminNewProductPage() {
                   )}
                 />
               </div>
-              <div className="space-y-4 rounded-sm border bg-card p-6">
+              <div className="space-y-4 rounded-sm border p-6">
                 <h3 className="text-sm font-medium">Pricing & Discount</h3>
                 <FormField
                   control={form.control}
@@ -285,7 +285,7 @@ export default function AdminNewProductPage() {
                   )}
                 </fieldset>
               </div>
-              <div className="space-y-4 rounded-sm border bg-card p-6">
+              <div className="space-y-4 rounded-sm border p-6">
                 <h3 className="text-sm font-medium">Inventory & Settings</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <FormField

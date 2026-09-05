@@ -135,7 +135,7 @@ export default function AdminOrdersPage() {
           Manage and update customer orders status here.
         </p>
       </div>
-      <Card className="border-border rounded-sm">
+      <Card className="border-border rounded-sm bg-white">
         <CardHeader>
           <CardTitle>All Orders ({pagination?.total || 0})</CardTitle>
         </CardHeader>

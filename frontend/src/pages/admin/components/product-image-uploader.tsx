@@ -66,7 +66,7 @@ export default function ProductImageUploader({
   }
 
   return (
-    <Card>
+    <Card className="rounded-sm">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium flex items-center justify-between">
           Product Images
