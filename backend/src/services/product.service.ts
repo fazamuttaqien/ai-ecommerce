@@ -1,54 +1,19 @@
 import slugify from 'slugify';
-import {
-  and,
-  asc,
-  count,
-  desc,
-  eq,
-  gt,
-  ilike,
-  gte,
-  lte,
-  ne,
-  or,
-} from 'drizzle-orm';
+import { and, asc, count, desc, eq, gt, ilike, gte, lte, ne, or } from 'drizzle-orm';
 import { db } from '../db';
 import { categories, products, reviews, users } from '../db/schema';
 import { calculateSalePrice } from '../utils/price.util';
 import { isValidId } from '../utils/id.util';
-import {
-  GetProductsInput,
-  GetDealsInput,
-  GetProductBySlugInput,
-  GetProductReviewsInput,
-  CreateProductInput,
-  UpdateProductInput,
-  GetProductsForAdminInput,
-} from '../validators/product.validator';
+import { GetProductsInput, GetDealsInput, GetProductBySlugInput, GetProductReviewsInput, CreateProductInput, UpdateProductInput, GetProductsForAdminInput } from '../validators/product.validator';
 import { BadRequestException, NotFoundException } from '../utils/app-error';
 import { productEmbeddingService } from './product-embedding.service';
 
 const productListColumns = {
-  _id: products._id,
-  name: products.name,
-  slug: products.slug,
-  images: products.images,
-  unit: products.unit,
-  originalPrice: products.originalPrice,
-  salePrice: products.salePrice,
-  discountPercent: products.discountPercent,
-  discountLabel: products.discountLabel,
-  stockCount: products.stockCount,
-  ratingAverage: products.ratingAverage,
-  reviewCount: products.reviewCount,
-  categoryId: products.categoryId,
+  _id: products._id, name: products.name, brand: products.brand, slug: products.slug, images: products.images, unit: products.unit,
+  originalPrice: products.originalPrice, salePrice: products.salePrice, discountPercent: products.discountPercent, discountLabel: products.discountLabel,
+  stockCount: products.stockCount, ratingAverage: products.ratingAverage, reviewCount: products.reviewCount, categoryId: products.categoryId,
 };
-
-const categoryShape = {
-  _id: categories._id,
-  name: categories.name,
-  slug: categories.slug,
-};
+const categoryShape = { _id: categories._id, name: categories.name, slug: categories.slug };
 
 export const getProductsService = async (query: GetProductsInput) => {
   const { categoryId, page, limit, hasDiscount, inStock, minPrice, maxPrice, sort, keyword, skip } = query;
@@ -70,14 +35,14 @@ export const getProductsService = async (query: GetProductsInput) => {
 };
 
 export const getDealsService = async ({ limit }: GetDealsInput) => {
-  const rows = await db.select({ _id: products._id, name: products.name, slug: products.slug, images: products.images, originalPrice: products.originalPrice, salePrice: products.salePrice, discountPercent: products.discountPercent, discountLabel: products.discountLabel, unit: products.unit, ratingAverage: products.ratingAverage, reviewCount: products.reviewCount }).from(products).where(and(eq(products.isActive, true), gt(products.discountPercent, 0), gt(products.stockCount, 0))).orderBy(desc(products.discountPercent)).limit(limit);
+  const rows = await db.select({ _id: products._id, name: products.name, brand: products.brand, slug: products.slug, images: products.images, originalPrice: products.originalPrice, salePrice: products.salePrice, discountPercent: products.discountPercent, discountLabel: products.discountLabel, unit: products.unit, ratingAverage: products.ratingAverage, reviewCount: products.reviewCount }).from(products).where(and(eq(products.isActive, true), gt(products.discountPercent, 0), gt(products.stockCount, 0))).orderBy(desc(products.discountPercent)).limit(limit);
   return { products: rows };
 };
 
 export const getProductBySlugService = async ({ slug }: GetProductBySlugInput) => {
-  const [product] = await db.select({ _id: products._id, name: products.name, slug: products.slug, images: products.images, description: products.description, originalPrice: products.originalPrice, salePrice: products.salePrice, unit: products.unit, discountPercent: products.discountPercent, discountLabel: products.discountLabel, stockCount: products.stockCount, ratingAverage: products.ratingAverage, reviewCount: products.reviewCount, categoryId: products.categoryId, createdAt: products.createdAt, category: categoryShape }).from(products).leftJoin(categories, eq(products.categoryId, categories._id)).where(and(eq(products.slug, slug), eq(products.isActive, true))).limit(1);
+  const [product] = await db.select({ _id: products._id, name: products.name, brand: products.brand, slug: products.slug, images: products.images, description: products.description, originalPrice: products.originalPrice, salePrice: products.salePrice, unit: products.unit, discountPercent: products.discountPercent, discountLabel: products.discountLabel, stockCount: products.stockCount, ratingAverage: products.ratingAverage, reviewCount: products.reviewCount, categoryId: products.categoryId, createdAt: products.createdAt, category: categoryShape }).from(products).leftJoin(categories, eq(products.categoryId, categories._id)).where(and(eq(products.slug, slug), eq(products.isActive, true))).limit(1);
   if (!product) throw new NotFoundException('Product not found');
-  const relatedProducts = await db.select({ _id: products._id, name: products.name, slug: products.slug, images: products.images, originalPrice: products.originalPrice, salePrice: products.salePrice, discountPercent: products.discountPercent, discountLabel: products.discountLabel, ratingAverage: products.ratingAverage, reviewCount: products.reviewCount }).from(products).where(and(eq(products.categoryId, product.categoryId), eq(products.isActive, true), ne(products.slug, slug))).orderBy(desc(products.createdAt)).limit(6);
+  const relatedProducts = await db.select({ _id: products._id, name: products.name, brand: products.brand, slug: products.slug, images: products.images, originalPrice: products.originalPrice, salePrice: products.salePrice, discountPercent: products.discountPercent, discountLabel: products.discountLabel, ratingAverage: products.ratingAverage, reviewCount: products.reviewCount }).from(products).where(and(eq(products.categoryId, product.categoryId), eq(products.isActive, true), ne(products.slug, slug))).orderBy(desc(products.createdAt)).limit(6);
   return { product, relatedProducts };
 };
 
@@ -104,9 +69,6 @@ export const createProductService = async (userId: string, data: CreateProductIn
   const slug = slugify(data.name, { lower: true, strict: true });
   const salePrice = data.discountPercent > 0 ? calculateSalePrice(data.originalPrice, data.discountPercent) : data.originalPrice;
   const [product] = await db.insert(products).values({ ...data, slug, salePrice, userId, categoryId }).returning();
-
-  // The product is already committed. Embedding generation is best-effort so
-  // Gemini/API failures never corrupt or roll back product creation.
   await productEmbeddingService.generate(product._id);
   return product;
 };
@@ -115,40 +77,18 @@ export const updateProductService = async (productId: string, data: UpdateProduc
   if (!isValidId(productId)) throw new BadRequestException('Invalid product ID');
   const [current] = await db.select().from(products).where(eq(products._id, productId)).limit(1);
   if (!current) throw new NotFoundException('Product not found');
-
   const nextCategoryId = data.categoryId ?? current.categoryId;
   if (!isValidId(nextCategoryId)) throw new BadRequestException('Invalid category ID');
   if (data.categoryId && data.categoryId !== current.categoryId) {
     const [category] = await db.select().from(categories).where(eq(categories._id, data.categoryId)).limit(1);
     if (!category) throw new BadRequestException('Category not found');
   }
-
-  const semanticChanged =
-    data.name !== undefined ||
-    data.description !== undefined ||
-    data.unit !== undefined ||
-    data.categoryId !== undefined && data.categoryId !== current.categoryId;
-
+  const semanticChanged = data.name !== undefined || data.brand !== undefined || data.description !== undefined || data.unit !== undefined || (data.categoryId !== undefined && data.categoryId !== current.categoryId);
   const updateData = {
-    ...data,
-    categoryId: nextCategoryId,
-    updatedAt: new Date(),
-    ...(data.name !== undefined
-      ? { slug: slugify(data.name, { lower: true, strict: true }) }
-      : {}),
-    ...(data.originalPrice !== undefined || data.discountPercent !== undefined
-      ? {
-          salePrice:
-            (data.discountPercent ?? current.discountPercent) > 0
-              ? calculateSalePrice(
-                  data.originalPrice ?? current.originalPrice,
-                  data.discountPercent ?? current.discountPercent,
-                )
-              : data.originalPrice ?? current.originalPrice,
-        }
-      : {}),
+    ...data, categoryId: nextCategoryId, updatedAt: new Date(),
+    ...(data.name !== undefined ? { slug: slugify(data.name, { lower: true, strict: true }) } : {}),
+    ...(data.originalPrice !== undefined || data.discountPercent !== undefined ? { salePrice: (data.discountPercent ?? current.discountPercent) > 0 ? calculateSalePrice(data.originalPrice ?? current.originalPrice, data.discountPercent ?? current.discountPercent) : data.originalPrice ?? current.originalPrice } : {}),
   };
-
   const [updated] = await db.update(products).set(updateData).where(eq(products._id, productId)).returning();
   if (semanticChanged) await productEmbeddingService.generate(productId);
   return updated;
@@ -158,7 +98,6 @@ export const deleteProductService = async (productId: string) => {
   if (!isValidId(productId)) throw new BadRequestException('Invalid product ID');
   const [deleted] = await db.delete(products).where(eq(products._id, productId)).returning({ _id: products._id });
   if (!deleted) throw new NotFoundException('Product not found');
-  // product_embeddings has ON DELETE CASCADE on product_id.
   return deleted;
 };
 
