@@ -1,5 +1,3 @@
-import { envConfig } from './env.config';
-
 const parseThreshold = (value: string | undefined): number => {
   const threshold = Number(value ?? 0.35);
 
@@ -19,7 +17,9 @@ const parsePositiveInteger = (
   const parsed = Number(value ?? fallback);
 
   if (!Number.isInteger(parsed) || parsed < 1) {
-    throw new Error('Semantic search pagination configuration must be positive integers');
+    throw new Error(
+      'Semantic search pagination configuration must be positive integers',
+    );
   }
 
   return parsed;
@@ -27,15 +27,15 @@ const parsePositiveInteger = (
 
 export const semanticSearchConfig = {
   similarityThreshold: parseThreshold(
-    envConfig.SEMANTIC_SEARCH_SIMILARITY_THRESHOLD,
+    process.env.SEMANTIC_SEARCH_SIMILARITY_THRESHOLD,
   ),
   defaultPage: 1,
   defaultPageSize: parsePositiveInteger(
-    envConfig.SEMANTIC_SEARCH_DEFAULT_PAGE_SIZE,
+    process.env.SEMANTIC_SEARCH_DEFAULT_PAGE_SIZE,
     20,
   ),
   maxPageSize: parsePositiveInteger(
-    envConfig.SEMANTIC_SEARCH_MAX_PAGE_SIZE,
+    process.env.SEMANTIC_SEARCH_MAX_PAGE_SIZE,
     100,
   ),
 };
