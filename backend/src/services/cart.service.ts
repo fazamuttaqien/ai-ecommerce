@@ -141,12 +141,15 @@ export const upsertCartService = async (
     };
   });
   const populatedItems = updatedCart.items.map((item) => ({
-    productId: item.product,
+    productId: item.product?._id ?? '',
     quantity: item.quantity,
   }));
   return {
     cart: { ...updatedCart, items: populatedItems },
-    ...calculateCartTotals(populatedItems),
+    ...calculateCartTotals(updatedCart.items.map((item) => ({
+      productId: item.product,
+      quantity: item.quantity,
+    }))),
   };
 };
 
@@ -161,12 +164,15 @@ export const getCartService = async (
   const loaded = await loadCart(cart._id);
   if (!loaded || loaded.items.length === 0) return empty();
   const populatedItems = loaded.items.map((item) => ({
-    productId: item.product,
+    productId: item.product?._id ?? '',
     quantity: item.quantity,
   }));
   return {
     cart: { ...loaded, items: populatedItems },
-    ...calculateCartTotals(populatedItems),
+    ...calculateCartTotals(loaded.items.map((item) => ({
+      productId: item.product,
+      quantity: item.quantity,
+    }))),
   };
 };
 
