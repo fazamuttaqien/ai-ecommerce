@@ -15,31 +15,31 @@
   --popover-foreground: #000000;
   --primary: #000000;
   --primary-foreground: #ffffff;
-  --secondary: #fbcfe8;
+  --secondary: #ffe9f5;
   --secondary-foreground: #000000;
   --muted: #f9fafb;
   --muted-foreground: #525252;
-  --accent: #fbcfe8;
+  --accent: #ffe9f5;
   --accent-foreground: #000000;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
-  --green-light: #f9a8d4;
+  --green-light: #f0d2e3;
   --border: #e5e5e5;
   --input: #e5e5e5;
-  --ring: #f9a8d4;
+  --ring: #f0d2e3;
   --chart-1: #000000;
-  --chart-2: #f9a8d4;
-  --chart-3: #fbcfe8;
+  --chart-2: #f0d2e3;
+  --chart-3: #ffe9f5;
   --chart-4: #ffffff;
   --chart-5: #525252;
   --sidebar: #000000;
   --sidebar-foreground: #ffffff;
-  --sidebar-primary: #f9a8d4;
+  --sidebar-primary: #f0d2e3;
   --sidebar-primary-foreground: #000000;
-  --sidebar-accent: #fbcfe8;
+  --sidebar-accent: #ffe9f5;
   --sidebar-accent-foreground: #000000;
   --sidebar-border: #262626;
-  --sidebar-ring: #f9a8d4;
+  --sidebar-ring: #f0d2e3;
   --radius: 0.125rem;
 }
 
@@ -50,33 +50,33 @@
   --card-foreground: #ffffff;
   --popover: #0a0a0a;
   --popover-foreground: #ffffff;
-  --primary: #fbcfe8;
+  --primary: #ffe9f5;
   --primary-foreground: #000000;
   --secondary: #262626;
   --secondary-foreground: #ffffff;
   --muted: #171717;
   --muted-foreground: #a3a3a3;
-  --accent: #fbcfe8;
+  --accent: #ffe9f5;
   --accent-foreground: #000000;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --green-light: #f9a8d4;
+  --green-light: #f0d2e3;
   --border: #262626;
   --input: #262626;
-  --ring: #f9a8d4;
+  --ring: #f0d2e3;
   --chart-1: #ffffff;
-  --chart-2: #f9a8d4;
-  --chart-3: #fbcfe8;
+  --chart-2: #f0d2e3;
+  --chart-3: #ffe9f5;
   --chart-4: #000000;
   --chart-5: #a3a3a3;
   --sidebar: #000000;
   --sidebar-foreground: #ffffff;
-  --sidebar-primary: #fbcfe8;
+  --sidebar-primary: #ffe9f5;
   --sidebar-primary-foreground: #000000;
   --sidebar-accent: #262626;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: #262626;
-  --sidebar-ring: #f9a8d4;
+  --sidebar-ring: #f0d2e3;
 }
 
 @theme inline {
@@ -132,7 +132,7 @@ button[data-slot='button'] {
   .mark-label {
     box-decoration-break: clone;
     -webkit-box-decoration-break: clone;
-    background-image: linear-gradient(90deg, #fbcfe8 50%, transparent 50%);
+    background-image: linear-gradient(90deg, #ffe9f5 50%, transparent 50%);
     background-position: var(--highlight-position, 0) 0;
     background-repeat: repeat;
     background-size: 200% 100%;
