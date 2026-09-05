@@ -27,9 +27,16 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.products.categoryId,
       to: r.categories._id,
     }),
+    embeddings: r.many.productEmbeddings(),
     cartItems: r.many.cartItems(),
     orderItems: r.many.orderItems(),
     reviews: r.many.reviews(),
+  },
+  productEmbeddings: {
+    product: r.one.products({
+      from: r.productEmbeddings.productId,
+      to: r.products._id,
+    }),
   },
   carts: {
     user: r.one.users({

@@ -10,6 +10,7 @@ import {
   timestamp,
   unique,
   uuid,
+  vector,
 } from 'drizzle-orm/pg-core';
 
 export const userRoleEnum = pgEnum('user_role', ['user', 'admin']);
@@ -121,6 +122,31 @@ export const products = pgTable(
     index('products_is_active_idx').on(table.isActive),
   ],
 );
+
+export const productEmbeddings = pgTable(
+  'product_embeddings',
+  {
+    _id: uuid('id').primaryKey().defaultRandom(),
+    productId: uuid('product_id')
+      .notNull()
+      .references(() => products._id, { onDelete: 'cascade' }),
+    embedding: vector('embedding', { dimensions: 1536 }).notNull(),
+    model: text('model').notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    unique('product_embeddings_product_model_unique').on(
+      table.productId,
+      table.model,
+    ),
+    index('product_embeddings_product_id_idx').on(table.productId),
+    index('product_embeddings_embedding_cosine_idx').using(
+      'hnsw',
+      table.embedding.op('vector_cosine_ops'),
+    ),
+  ],
+);
+
 export const carts = pgTable('carts', {
   _id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id')
@@ -224,6 +250,7 @@ export type User = typeof users.$inferSelect;
 export type Address = typeof addresses.$inferSelect;
 export type Category = typeof categories.$inferSelect;
 export type Product = typeof products.$inferSelect;
+export type ProductEmbedding = typeof productEmbeddings.$inferSelect;
 export type Cart = typeof carts.$inferSelect;
 export type CartItem = typeof cartItems.$inferSelect;
 export type Order = typeof orders.$inferSelect;
