@@ -102,7 +102,7 @@ const ProductCard = ({
         <div className="relative aspect-square w-full overflow-hidden">
           <Link
             to={productPath}
-            className="flex size-full items-center justify-center"
+            className="flex size-full items-center justify-center p-1"
           >
             <img
               src={imageUrl}
