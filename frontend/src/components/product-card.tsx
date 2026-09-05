@@ -99,7 +99,7 @@ const ProductCard = ({
           isOutofStock && 'opacity-50 cursor-not-allowed!',
         )}
       >
-        <div className="relative aspect-square size-full overflow-hidden">
+        <div className="relative aspect-square w-full overflow-hidden">
           <Link
             to={productPath}
             className="flex size-full items-center justify-center"
