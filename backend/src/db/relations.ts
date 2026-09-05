@@ -1,74 +1,88 @@
-import { relations } from 'drizzle-orm';
-import {
-  users,
-  addresses,
-  categories,
-  products,
-  carts,
-  cartItems,
-  orders,
-  orderItems,
-  reviews,
-} from './schema';
-export const usersRelations = relations(users, ({ many }) => ({
-  addresses: many(addresses),
-  products: many(products),
-  carts: many(carts),
-  orders: many(orders),
-  reviews: many(reviews),
-}));
-export const addressesRelations = relations(addresses, ({ one }) => ({
-  user: one(users, { fields: [addresses.userId], references: [users._id] }),
-}));
-export const categoriesRelations = relations(categories, ({ many }) => ({
-  products: many(products),
-}));
-export const productsRelations = relations(products, ({ one, many }) => ({
-  user: one(users, { fields: [products.userId], references: [users._id] }),
-  category: one(categories, {
-    fields: [products.categoryId],
-    references: [categories._id],
-  }),
-  cartItems: many(cartItems),
-  orderItems: many(orderItems),
-  reviews: many(reviews),
-}));
-export const cartsRelations = relations(carts, ({ one, many }) => ({
-  user: one(users, { fields: [carts.userId], references: [users._id] }),
-  items: many(cartItems),
-}));
-export const cartItemsRelations = relations(cartItems, ({ one }) => ({
-  cart: one(carts, { fields: [cartItems.cartId], references: [carts._id] }),
-  product: one(products, {
-    fields: [cartItems.productId],
-    references: [products._id],
-  }),
-}));
-export const ordersRelations = relations(orders, ({ one, many }) => ({
-  user: one(users, { fields: [orders.userId], references: [users._id] }),
-  items: many(orderItems),
-  reviews: many(reviews),
-}));
-export const orderItemsRelations = relations(orderItems, ({ one }) => ({
-  order: one(orders, {
-    fields: [orderItems.orderId],
-    references: [orders._id],
-  }),
-  product: one(products, {
-    fields: [orderItems.productId],
-    references: [products._id],
-  }),
-  review: one(reviews),
-}));
-export const reviewsRelations = relations(reviews, ({ one }) => ({
-  user: one(users, { fields: [reviews.userId], references: [users._id] }),
-  order: one(orders, { fields: [reviews.orderId], references: [orders._id] }),
-  orderItem: one(orderItems, {
-    fields: [reviews.orderItemId],
-    references: [orderItems._id],
-  }),
-  product: one(products, {
-    fields: [reviews.productId],
-    references: [products._id],
-  }),
+import { defineRelations } from 'drizzle-orm';
+import * as schema from './schema';
+
+export const relations = defineRelations(schema, (r) => ({
+  users: {
+    addresses: r.many.addresses(),
+    products: r.many.products(),
+    carts: r.many.carts(),
+    orders: r.many.orders(),
+    reviews: r.many.reviews(),
+  },
+  addresses: {
+    user: r.one.users({
+      from: r.addresses.userId,
+      to: r.users._id,
+    }),
+  },
+  categories: {
+    products: r.many.products(),
+  },
+  products: {
+    user: r.one.users({
+      from: r.products.userId,
+      to: r.users._id,
+    }),
+    category: r.one.categories({
+      from: r.products.categoryId,
+      to: r.categories._id,
+    }),
+    cartItems: r.many.cartItems(),
+    orderItems: r.many.orderItems(),
+    reviews: r.many.reviews(),
+  },
+  carts: {
+    user: r.one.users({
+      from: r.carts.userId,
+      to: r.users._id,
+    }),
+    items: r.many.cartItems(),
+  },
+  cartItems: {
+    cart: r.one.carts({
+      from: r.cartItems.cartId,
+      to: r.carts._id,
+    }),
+    product: r.one.products({
+      from: r.cartItems.productId,
+      to: r.products._id,
+    }),
+  },
+  orders: {
+    user: r.one.users({
+      from: r.orders.userId,
+      to: r.users._id,
+    }),
+    items: r.many.orderItems(),
+    reviews: r.many.reviews(),
+  },
+  orderItems: {
+    order: r.one.orders({
+      from: r.orderItems.orderId,
+      to: r.orders._id,
+    }),
+    product: r.one.products({
+      from: r.orderItems.productId,
+      to: r.products._id,
+    }),
+    review: r.one.reviews(),
+  },
+  reviews: {
+    user: r.one.users({
+      from: r.reviews.userId,
+      to: r.users._id,
+    }),
+    order: r.one.orders({
+      from: r.reviews.orderId,
+      to: r.orders._id,
+    }),
+    orderItem: r.one.orderItems({
+      from: r.reviews.orderItemId,
+      to: r.orderItems._id,
+    }),
+    product: r.one.products({
+      from: r.reviews.productId,
+      to: r.products._id,
+    }),
+  },
 }));
