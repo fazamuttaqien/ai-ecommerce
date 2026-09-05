@@ -54,6 +54,7 @@ const extractRecommendedProducts = (
       };
       if (
         value.toolName !== 'search_products' &&
+        value.toolName !== 'search_products_semantic' &&
         value.toolName !== 'get_product'
       )
         continue;
@@ -69,16 +70,16 @@ const extractRecommendedProducts = (
       for (const candidate of candidateProducts) {
         if (!candidate || typeof candidate !== 'object') continue;
         const product = candidate as Record<string, unknown>;
-        const id = String(product._id ?? product.slug ?? '');
+        const id = String(product._id ?? product.id ?? product.slug ?? '');
         if (!id || seen.has(id)) continue;
         seen.add(id);
         products.push({
-          _id: product._id,
+          _id: product._id ?? product.id,
           name: product.name,
           slug: product.slug,
           image: Array.isArray(product.images)
             ? (product.images[0] ?? null)
-            : null,
+            : (product.image ?? null),
           salePrice: product.salePrice,
           originalPrice: product.originalPrice,
           stockCount: product.stockCount,
