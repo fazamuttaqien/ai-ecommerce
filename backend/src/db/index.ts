@@ -1,19 +1,19 @@
-import postgres from 'postgres';
-import { drizzle } from 'drizzle-orm/postgres-js';
+import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
 
 import { envConfig } from '../config/env.config';
 import { relations } from './relations';
-import * as schema from './schema';
 
-const client = postgres(envConfig.DATABASE_URL, {
+const pool = new Pool({
+  connectionString: envConfig.DATABASE_URL,
   max: envConfig.NODE_ENV === 'test' ? 1 : undefined,
 });
 
-export const db = drizzle({ client, relations });
+export const db = drizzle({ client: pool, relations });
 
 export const connectDatabase = async (): Promise<void> => {
   try {
-    await client`SELECT 1`;
+    await pool.query('SELECT 1');
     console.log('Database connected!');
   } catch (error) {
     console.error('Database connection error', error);
@@ -22,7 +22,7 @@ export const connectDatabase = async (): Promise<void> => {
 };
 
 export const disconnectDatabase = async (): Promise<void> => {
-  await client.end({ timeout: 5 });
+  await pool.end();
 };
 
 export * from './schema';
