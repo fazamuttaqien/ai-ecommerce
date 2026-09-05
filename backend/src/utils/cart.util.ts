@@ -8,7 +8,7 @@ type CartTotalsItem = {
   productId: {
     salePrice: number;
     [key: string]: unknown;
-  };
+  } | null;
   quantity: number;
 };
 
