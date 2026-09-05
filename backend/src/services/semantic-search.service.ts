@@ -1,8 +1,9 @@
-import { embeddingService } from './embedding.service';
+import { embeddingService, type EmbeddingService } from './embedding.service';
 import {
   semanticSearchRepository,
   type SemanticSearchFilters,
   type SemanticSearchRepositoryResponse,
+  type SemanticSearchRepository,
 } from '../repositories/semantic-search.repository';
 import { semanticSearchConfig } from '../config/semantic-search.config';
 
@@ -46,6 +47,13 @@ export type SemanticSearchResponse = {
 };
 
 export class SemanticSearchService {
+  constructor(
+    private readonly embeddings: Pick<EmbeddingService, 'embedQueryOrThrow'> =
+      embeddingService,
+    private readonly repository: Pick<SemanticSearchRepository, 'search'> =
+      semanticSearchRepository,
+  ) {}
+
   async search(input: SemanticSearchInput): Promise<SemanticSearchResponse> {
     const query = input.query.trim();
     const page = input.page ?? semanticSearchConfig.defaultPage;
@@ -64,7 +72,7 @@ export class SemanticSearchService {
       }
     }
 
-    const queryEmbedding = await embeddingService.embedQueryOrThrow(query);
+    const queryEmbedding = await this.embeddings.embedQueryOrThrow(query);
 
     const filters: SemanticSearchFilters = {
       categoryId: input.categoryId,
@@ -72,7 +80,7 @@ export class SemanticSearchService {
       maxPrice: input.maxPrice,
     };
 
-    const result = await semanticSearchRepository.search(
+    const result = await this.repository.search(
       queryEmbedding,
       filters,
       page,
