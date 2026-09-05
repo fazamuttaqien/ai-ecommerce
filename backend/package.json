@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@ai-sdk/groq": "^4.0.37",
+    "@google/genai": "2.20.0",
     "@types/streamifier": "^0.1.2",
     "ai": "^7.0.91",
     "bcryptjs": "^3.0.3",
