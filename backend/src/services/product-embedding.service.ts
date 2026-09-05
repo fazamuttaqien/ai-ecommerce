@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
 import { embeddingConfig } from '../config/embedding.config';
 import { db } from '../db';
@@ -13,6 +13,21 @@ export type ProductEmbeddingResult = {
 };
 
 export class ProductEmbeddingService {
+  async exists(productId: string): Promise<boolean> {
+    const [row] = await db
+      .select({ id: productEmbeddings._id })
+      .from(productEmbeddings)
+      .where(
+        and(
+          eq(productEmbeddings.productId, productId),
+          eq(productEmbeddings.model, embeddingConfig.model),
+        ),
+      )
+      .limit(1);
+
+    return Boolean(row);
+  }
+
   async generate(productId: string): Promise<ProductEmbeddingResult | null> {
     const [product] = await db
       .select({
@@ -34,11 +49,9 @@ export class ProductEmbeddingService {
     const text = buildProductEmbeddingText(product.product, product.category);
     const embedding = await embeddingService.embedDocument(text);
 
-    // Do not touch the database when Gemini fails. This keeps a failed
-    // external embedding request from creating a partial embedding row.
-    if (!embedding) {
-      return null;
-    }
+    // Product persistence is independent from embedding persistence. A Gemini
+    // failure must never make a successful product create/update fail.
+    if (!embedding) return null;
 
     try {
       await db
@@ -68,6 +81,12 @@ export class ProductEmbeddingService {
       );
       return null;
     }
+  }
+
+  async delete(productId: string): Promise<void> {
+    await db
+      .delete(productEmbeddings)
+      .where(eq(productEmbeddings.productId, productId));
   }
 }
 
