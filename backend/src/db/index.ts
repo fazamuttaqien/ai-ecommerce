@@ -2,13 +2,14 @@ import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 
 import { envConfig } from '../config/env.config';
+import { relations } from './relations';
 import * as schema from './schema';
 
 const client = postgres(envConfig.DATABASE_URL, {
   max: envConfig.NODE_ENV === 'test' ? 1 : undefined,
 });
 
-export const db = drizzle(client, { schema });
+export const db = drizzle({ client, relations });
 
 export const connectDatabase = async (): Promise<void> => {
   try {
