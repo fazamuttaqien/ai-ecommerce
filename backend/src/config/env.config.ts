@@ -21,4 +21,6 @@ export const envConfig = {
   AI_PROVIDER: process.env.AI_PROVIDER || 'groq',
   AI_MODEL: process.env.AI_MODEL || 'openai/gpt-oss-120b',
   GROQ_API_KEY: process.env.GROQ_API_KEY || '',
+
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
 };
