@@ -133,6 +133,7 @@ const tests = [
         'get_product',
         'get_product_reviews',
         'search_products',
+        'search_products_semantic',
       ]);
       assert.equal('update_product' in AI_SHOPPING_TOOLS, false);
       assert.equal('delete_product' in AI_SHOPPING_TOOLS, false);
