@@ -48,13 +48,30 @@ export const optionalCartAuth = (
       req?.cookies?.instant_guest_cart_id ?? generateGuestCartId();
     req.user = undefined;
     req.guestCartId = guestCartId;
-    if (!req.cookies?.instant_guest_cart_id)
+    if (!req.cookies?.instant_guest_cart_id) {
       setGuestCartCookie(res, guestCartId);
+    }
     return next();
   }
-  passport.authenticate('jwt', { session: false }, (_err: any, user: any) => {
-    req.user = user;
-    req.guestCartId = null;
+
+  passport.authenticate('jwt', { session: false }, (err: unknown, user: Express.User | false | null) => {
+    if (err) {
+      return next(err);
+    }
+
+    if (user) {
+      req.user = user;
+      req.guestCartId = null;
+      return next();
+    }
+
+    const guestCartId =
+      req?.cookies?.instant_guest_cart_id ?? generateGuestCartId();
+    req.user = undefined;
+    req.guestCartId = guestCartId;
+    if (!req.cookies?.instant_guest_cart_id) {
+      setGuestCartCookie(res, guestCartId);
+    }
     return next();
   })(req, res, next);
 };
