@@ -92,11 +92,13 @@ const CartSheet = () => {
                     key={item.productId}
                     className="grid grid-cols-[88px_1fr] gap-4 px-5 py-3"
                   >
-                    <img
-                      src={item.imageUrl}
-                      alt={item.name}
-                      className="size-20 object-contain"
-                    />
+                    <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden bg-muted/30">
+                      <img
+                        src={item.imageUrl}
+                        alt={item.name}
+                        className="size-full object-contain"
+                      />
+                    </div>
 
                     <div className="flex min-w-0 flex-col gap-3">
                       <div className="flex items-start justify-between gap-3">
