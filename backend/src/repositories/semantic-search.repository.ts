@@ -1,4 +1,4 @@
-import { and, asc, cosineDistance, count, eq, gte, lte, sql } from 'drizzle-orm';
+import { and, asc, cosineDistance, eq, gte, lte, sql } from 'drizzle-orm';
 
 import { embeddingConfig } from '../config/embedding.config';
 import { semanticSearchConfig } from '../config/semantic-search.config';
@@ -27,20 +27,29 @@ export class SemanticSearchRepository {
     if (filters.minPrice !== undefined) conditions.push(gte(products.salePrice, filters.minPrice));
     if (filters.maxPrice !== undefined) conditions.push(lte(products.salePrice, filters.maxPrice));
 
-    const [rows, totalRows] = await Promise.all([
-      db.select({
+    const rows = await db
+      .select({
         id: products._id, name: products.name, brand: products.brand, slug: products.slug, description: products.description,
         images: products.images, originalPrice: products.originalPrice, salePrice: products.salePrice,
         discountPercent: products.discountPercent, unit: products.unit, stockCount: products.stockCount,
         ratingAverage: products.ratingAverage, reviewCount: products.reviewCount,
         category: { id: categories._id, name: categories.name }, similarity,
-      }).from(productEmbeddings).innerJoin(products, eq(productEmbeddings.productId, products._id))
-        .leftJoin(categories, eq(products.categoryId, categories._id)).where(and(...conditions))
-        .orderBy(asc(distance), asc(products._id)).limit(pageSize).offset(offset),
-      db.select({ count: count() }).from(productEmbeddings).innerJoin(products, eq(productEmbeddings.productId, products._id)).where(and(...conditions)),
-    ]);
+        total: sql<number>`count(*) over()`,
+      })
+      .from(productEmbeddings)
+      .innerJoin(products, eq(productEmbeddings.productId, products._id))
+      .leftJoin(categories, eq(products.categoryId, categories._id))
+      .where(and(...conditions))
+      .orderBy(asc(distance), asc(products._id))
+      .limit(pageSize)
+      .offset(offset);
 
-    return { items: rows.map((row) => ({ ...row, similarity: Number(row.similarity) })), total: Number(totalRows[0]?.count ?? 0) };
+    const total = rows.length > 0 ? Number(rows[0].total) : 0;
+
+    return {
+      items: rows.map(({ total: _total, ...row }) => ({ ...row, similarity: Number(row.similarity) })),
+      total,
+    };
   }
 }
 
