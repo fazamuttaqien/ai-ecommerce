@@ -48,7 +48,10 @@ export class ProductEmbeddingService {
       return null;
     }
 
-    const text = buildProductEmbeddingText(product.product, product.category);
+    const text = buildProductEmbeddingText({
+      ...product.product,
+      category: product.category,
+    });
     const embedding = await embeddingService.embedDocument(text);
 
     // Product persistence is independent from embedding persistence. A Gemini
