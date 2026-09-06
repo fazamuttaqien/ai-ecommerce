@@ -19,6 +19,7 @@
     "test:ai-chat": "tsx src/tests/ai/ai-chat.test.ts",
     "test:embedding": "tsx src/tests/embedding/gemini-embedding.test.ts && tsx src/tests/embedding/product-embedding-text.test.ts",
     "test:semantic-search": "tsx src/tests/semantic-search/semantic-search.service.test.ts",
+    "test:hybrid-search": "tsx src/tests/hybrid-search/hybrid-search.service.test.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
