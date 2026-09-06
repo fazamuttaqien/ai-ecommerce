@@ -1,657 +1,74 @@
 import 'dotenv/config';
 import bcrypt from 'bcryptjs';
 import slugify from 'slugify';
-
 import { eq, inArray } from 'drizzle-orm';
 import { db } from '../db';
 import { categories, products, users } from '../db/schema';
 
-const ADMIN_EMAIL = 'admin@example.com';
-const ADMIN_PASSWORD = 'Admin123!';
+type ProductSeed = readonly [string, string, string, string, number, number, number, string];
 
-const productsData = [
-  [
-    'Fresh Red Apples',
-    'Fruits & Vegetables',
-    'Crisp and juicy red apples',
-    'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=800&q=80',
-    4.99,
-    0,
-    100,
-    'kg',
-    true,
-  ],
-  [
-    'Organic Bananas',
-    'Fruits & Vegetables',
-    'Sweet organic bananas',
-    'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=800&q=80',
-    3.49,
-    10,
-    75,
-    'kg',
-    true,
-  ],
-  [
-    'Fresh Hass Avocado',
-    'Fruits & Vegetables',
-    'Creamy ripe Hass avocados',
-    'https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?auto=format&fit=crop&w=800&q=80',
-    6.99,
-    5,
-    60,
-    'kg',
-    true,
-  ],
-  [
-    'Sweet Valencia Oranges',
-    'Fruits & Vegetables',
-    'Juicy sweet oranges',
-    'https://images.unsplash.com/photo-1547514701-42782101795e?auto=format&fit=crop&w=800&q=80',
-    4.49,
-    0,
-    90,
-    'kg',
-    true,
-  ],
-  [
-    'Fresh Broccoli Florets',
-    'Fruits & Vegetables',
-    'Fresh green broccoli florets',
-    'https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?auto=format&fit=crop&w=800&q=80',
-    3.99,
-    8,
-    45,
-    'kg',
-    true,
-  ],
-  [
-    'Premium Carrots',
-    'Fruits & Vegetables',
-    'Crunchy fresh carrots',
-    'https://images.unsplash.com/photo-1445282768818-728615cc910a?auto=format&fit=crop&w=800&q=80',
-    2.79,
-    0,
-    80,
-    'kg',
-    true,
-  ],
-  [
-    'Fresh Strawberries',
-    'Fruits & Vegetables',
-    'Sweet ripe strawberries',
-    'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?auto=format&fit=crop&w=800&q=80',
-    5.99,
-    12,
-    40,
-    'kg',
-    true,
-  ],
-  [
-    'Ripe Mangoes',
-    'Fruits & Vegetables',
-    'Sweet tropical mangoes',
-    'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=800&q=80',
-    5.49,
-    0,
-    55,
-    'kg',
-    true,
-  ],
-  [
-    'Classic Potato Chips',
-    'Snacks',
-    'Crispy salted potato chips',
-    'https://images.unsplash.com/photo-1566478989037-eec170784d0b?auto=format&fit=crop&w=800&q=80',
-    2.49,
-    10,
-    120,
-    'pc',
-    true,
-  ],
-  [
-    'Cheddar Cheese Crackers',
-    'Snacks',
-    'Crunchy crackers with cheddar flavor',
-    'https://images.unsplash.com/photo-1621939514649-280e2aa9f3d0?auto=format&fit=crop&w=800&q=80',
-    3.29,
-    0,
-    90,
-    'pc',
-    true,
-  ],
-  [
-    'Honey Roasted Peanuts',
-    'Snacks',
-    'Crunchy peanuts with honey coating',
-    'https://images.unsplash.com/photo-1567892737950-30c9c8d1a9b7?auto=format&fit=crop&w=800&q=80',
-    2.99,
-    5,
-    70,
-    'pc',
-    true,
-  ],
-  [
-    'Chocolate Chip Cookies',
-    'Snacks',
-    'Buttery cookies with chocolate chips',
-    'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?auto=format&fit=crop&w=800&q=80',
-    3.99,
-    15,
-    85,
-    'pc',
-    true,
-  ],
-  [
-    'Sea Salt Popcorn',
-    'Snacks',
-    'Light and crunchy sea salt popcorn',
-    'https://images.unsplash.com/photo-1578849278619-e73505e9610f?auto=format&fit=crop&w=800&q=80',
-    2.19,
-    0,
-    100,
-    'pc',
-    true,
-  ],
-  [
-    'Granola Energy Bars',
-    'Snacks',
-    'Oat and nut energy bars',
-    'https://images.unsplash.com/photo-1622484211148-6f1e6d2c8d6f?auto=format&fit=crop&w=800&q=80',
-    4.59,
-    10,
-    65,
-    'pc',
-    true,
-  ],
-  [
-    'Whole Wheat Bread',
-    'Bakery',
-    'Freshly baked whole wheat bread',
-    'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80',
-    2.99,
-    0,
-    50,
-    'pc',
-    true,
-  ],
-  [
-    'Butter Croissant',
-    'Bakery',
-    'Flaky buttery French croissant',
-    'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=800&q=80',
-    3.49,
-    5,
-    45,
-    'pc',
-    true,
-  ],
-  [
-    'Blueberry Muffin',
-    'Bakery',
-    'Soft muffin filled with blueberries',
-    'https://images.unsplash.com/photo-1607958996333-41aef7caefaa?auto=format&fit=crop&w=800&q=80',
-    3.29,
-    0,
-    40,
-    'pc',
-    true,
-  ],
-  [
-    'Cinnamon Roll',
-    'Bakery',
-    'Soft cinnamon roll with sweet glaze',
-    'https://images.unsplash.com/photo-1509365465985-25d11c17e812?auto=format&fit=crop&w=800&q=80',
-    3.79,
-    10,
-    35,
-    'pc',
-    true,
-  ],
-  [
-    'Chocolate Fudge Brownie',
-    'Bakery',
-    'Rich chocolate fudge brownie',
-    'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=800&q=80',
-    4.29,
-    15,
-    30,
-    'pc',
-    true,
-  ],
-  [
-    'Fresh Sourdough Loaf',
-    'Bakery',
-    'Artisan sourdough bread loaf',
-    'https://images.unsplash.com/photo-1549931319-a545dcf3bc73?auto=format&fit=crop&w=800&q=80',
-    5.49,
-    0,
-    25,
-    'pc',
-    true,
-  ],
-  [
-    'Sparkling Mineral Water',
-    'Beverages',
-    'Refreshing sparkling mineral water',
-    'https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=800&q=80',
-    1.99,
-    0,
-    150,
-    'pc',
-    true,
-  ],
-  [
-    'Fresh Orange Juice',
-    'Beverages',
-    'Fresh tasting orange juice',
-    'https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=800&q=80',
-    5.99,
-    15,
-    30,
-    'pc',
-    true,
-  ],
-  [
-    'Cold Brew Coffee',
-    'Beverages',
-    'Smooth ready-to-drink cold brew coffee',
-    'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=800&q=80',
-    4.99,
-    10,
-    50,
-    'pc',
-    true,
-  ],
-  [
-    'Green Tea Bottled Drink',
-    'Beverages',
-    'Refreshing bottled green tea',
-    'https://images.unsplash.com/photo-1556881286-fc6915169721?auto=format&fit=crop&w=800&q=80',
-    2.79,
-    0,
-    80,
-    'pc',
-    true,
-  ],
-  [
-    'Strawberry Yogurt Smoothie',
-    'Beverages',
-    'Creamy strawberry yogurt smoothie',
-    'https://images.unsplash.com/photo-1553530666-ba11a7da3888?auto=format&fit=crop&w=800&q=80',
-    4.49,
-    10,
-    45,
-    'pc',
-    true,
-  ],
-  [
-    'Classic Cola Drink',
-    'Beverages',
-    'Classic carbonated cola drink',
-    'https://images.unsplash.com/photo-1629203849820-fdd70d49c38e?auto=format&fit=crop&w=800&q=80',
-    2.49,
-    5,
-    100,
-    'pc',
-    true,
-  ],
-  [
-    'Frozen Margherita Pizza',
-    'Frozen Foods',
-    'Frozen pizza with tomato and mozzarella',
-    'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80',
-    8.99,
-    20,
-    35,
-    'pc',
-    true,
-  ],
-  [
-    'Frozen Chicken Nuggets',
-    'Frozen Foods',
-    'Crispy frozen chicken nuggets',
-    'https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=800&q=80',
-    7.49,
-    10,
-    45,
-    'pc',
-    true,
-  ],
-  [
-    'Frozen Mixed Vegetables',
-    'Frozen Foods',
-    'Convenient mixed frozen vegetables',
-    'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=800&q=80',
-    4.99,
-    0,
-    60,
-    'pc',
-    true,
-  ],
-  [
-    'Frozen French Fries',
-    'Frozen Foods',
-    'Crispy frozen French fries',
-    'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=800&q=80',
-    5.49,
-    15,
-    50,
-    'pc',
-    true,
-  ],
-  [
-    'Frozen Berry Mix',
-    'Frozen Foods',
-    'Mixed frozen berries for smoothies',
-    'https://images.unsplash.com/photo-1498557850523-fd3d118b962e?auto=format&fit=crop&w=800&q=80',
-    6.99,
-    5,
-    40,
-    'pc',
-    true,
-  ],
-  [
-    'Frozen Salmon Fillet',
-    'Frozen Foods',
-    'Premium frozen salmon fillet',
-    'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=800&q=80',
-    12.99,
-    10,
-    25,
-    'pc',
-    true,
-  ],
-  [
-    'Fresh Chicken Breast',
-    'Meat & Seafood',
-    'Tender boneless chicken breast',
-    'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&w=800&q=80',
-    9.99,
-    5,
-    40,
-    'kg',
-    true,
-  ],
-  [
-    'Premium Beef Steak',
-    'Meat & Seafood',
-    'Tender premium beef steak',
-    'https://images.unsplash.com/photo-1546964124-0cce460f38ef?auto=format&fit=crop&w=800&q=80',
-    18.99,
-    10,
-    20,
-    'kg',
-    true,
-  ],
-  [
-    'Fresh White Shrimp',
-    'Meat & Seafood',
-    'Fresh peeled white shrimp',
-    'https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?auto=format&fit=crop&w=800&q=80',
-    14.99,
-    0,
-    25,
-    'kg',
-    true,
-  ],
-  [
-    'Fresh Tuna Fillet',
-    'Meat & Seafood',
-    'Fresh tuna fillet for grilling',
-    'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=800&q=80',
-    16.99,
-    8,
-    18,
-    'kg',
-    true,
-  ],
-  [
-    'Jasmine White Rice',
-    'Pantry Staples',
-    'Fragrant long-grain jasmine rice',
-    'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=800&q=80',
-    10.99,
-    10,
-    100,
-    'kg',
-    true,
-  ],
-  [
-    'All-Purpose Wheat Flour',
-    'Pantry Staples',
-    'Versatile all-purpose wheat flour',
-    'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80',
-    4.49,
-    0,
-    80,
-    'kg',
-    true,
-  ],
-  [
-    'Extra Virgin Olive Oil',
-    'Pantry Staples',
-    'Cold-pressed extra virgin olive oil',
-    'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=800&q=80',
-    11.99,
-    15,
-    45,
-    'pc',
-    true,
-  ],
-  [
-    'Creamy Peanut Butter',
-    'Pantry Staples',
-    'Smooth creamy peanut butter',
-    'https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?auto=format&fit=crop&w=800&q=80',
-    6.49,
-    5,
-    55,
-    'pc',
-    true,
-  ],
-  [
-    'Tomato Pasta Sauce',
-    'Pantry Staples',
-    'Rich tomato pasta sauce',
-    'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=800&q=80',
-    4.99,
-    0,
-    70,
-    'pc',
-    true,
-  ],
-  [
-    'Gentle Baby Shampoo',
-    'Baby Care',
-    'Mild shampoo for delicate baby hair',
-    'https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=800&q=80',
-    7.99,
-    10,
-    35,
-    'pc',
-    true,
-  ],
-  [
-    'Soft Baby Diapers',
-    'Baby Care',
-    'Soft absorbent diapers for babies',
-    'https://images.unsplash.com/photo-1604917869287-3ae73c77e227?auto=format&fit=crop&w=800&q=80',
-    12.99,
-    5,
-    50,
-    'pc',
-    true,
-  ],
-  [
-    'Baby Moisturizing Lotion',
-    'Baby Care',
-    'Gentle moisturizing lotion for baby skin',
-    'https://images.unsplash.com/photo-1556229010-6c3f2c9ca5f8?auto=format&fit=crop&w=800&q=80',
-    8.49,
-    0,
-    40,
-    'pc',
-    true,
-  ],
-  [
-    'Nourishing Hair Conditioner',
-    'Personal Care',
-    'Nourishing conditioner for soft hair',
-    'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?auto=format&fit=crop&w=800&q=80',
-    6.99,
-    10,
-    45,
-    'pc',
-    true,
-  ],
-  [
-    'Refreshing Body Wash',
-    'Personal Care',
-    'Refreshing daily body wash',
-    'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=800&q=80',
-    7.49,
-    5,
-    50,
-    'pc',
-    true,
-  ],
-  [
-    'Daily Facial Cleanser',
-    'Personal Care',
-    'Gentle facial cleanser for everyday use',
-    'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=800&q=80',
-    8.99,
-    15,
-    35,
-    'pc',
-    true,
-  ],
-  [
-    'Mint Fresh Toothpaste',
-    'Personal Care',
-    'Refreshing mint toothpaste',
-    'https://images.unsplash.com/photo-1559591937-e8a9f7e5a3c7?auto=format&fit=crop&w=800&q=80',
-    3.99,
-    0,
-    75,
-    'pc',
-    true,
-  ],
-  [
-    'Hydrating Hand Soap',
-    'Personal Care',
-    'Gentle hydrating liquid hand soap',
-    'https://images.unsplash.com/photo-1584305574647-0cc949a2bb9f?auto=format&fit=crop&w=800&q=80',
-    4.49,
-    10,
-    60,
-    'pc',
-    true,
-  ],
-] as const;
+const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL ?? 'admin@example.com';
+const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD;
+
+const productsData: readonly ProductSeed[] = [
+  ['Developer Pro Laptop 14', 'Technology', 'NovaTech', 'A lightweight laptop for programmers, students, and professionals. It combines a responsive multi-core processor, 16 GB memory, fast SSD storage, comfortable keyboard, and sharp display for coding, documentation, video calls, web browsing, and everyday multitasking.', 899.99, 10, 18, 'pc'],
+  ['CreatorBook 16 Laptop', 'Technology', 'PixelForge', 'A large-screen laptop for photo editing, video production, interface design, and demanding desktop applications. The spacious display, dedicated graphics capability, generous memory, and fast storage make it useful for creative work as well as software development and office productivity.', 1299.99, 8, 12, 'pc'],
+  ['Vision X5 Smartphone', 'Technology', 'NovaTech', 'A versatile smartphone for photography, communication, navigation, streaming, and mobile productivity. It features a bright OLED display, capable multi-camera system, generous storage, long battery life, and fast charging for travel, social media, entertainment, and everyday work.', 649.99, 12, 25, 'pc'],
+  ['SoundWave ANC Headphones', 'Technology', 'SoundWave', 'Wireless over-ear headphones for focused work, commuting, study, music, podcasts, movies, and online meetings. Active noise cancellation reduces surrounding distractions while cushioned ear cups and long battery life support comfortable extended listening.', 179.99, 15, 30, 'pc'],
+  ['UltraFit Smartwatch', 'Technology', 'FitCore', 'A practical smartwatch for tracking daily activity, workouts, sleep routines, heart-rate trends, and notifications. Its lightweight design, bright touch display, water resistance, and multi-day battery make it suitable for exercise, commuting, and everyday use.', 149.99, 10, 22, 'pc'],
+  ['4K Productivity Monitor 27', 'Technology', 'ViewPoint', 'A 27-inch 4K monitor for developers, designers, analysts, and professionals who need sharp text and a spacious desktop. High resolution provides clear application windows and detailed visuals, while the adjustable stand supports comfortable long work and study sessions.', 329.99, 10, 14, 'pc'],
+  ['Everyday Cotton T-Shirt', 'Clothing & Fashion', 'UrbanThread', 'A soft everyday cotton T-shirt for casual outfits, campus activities, travel, and relaxed weekends. Breathable fabric feels comfortable in warm weather, while the simple regular fit pairs easily with jeans, chinos, shorts, and casual sneakers.', 24.99, 10, 60, 'pc'],
+  ['Performance Running T-Shirt', 'Clothing & Fashion', 'ActivePeak', 'A lightweight athletic shirt for running, jogging, gym sessions, and high-movement activities. Breathable fabric helps manage moisture and the flexible cut allows comfortable movement, making it suitable for long runs, interval training, and outdoor exercise in warm conditions.', 39.99, 15, 45, 'pc'],
+  ['Relaxed Linen Shirt', 'Clothing & Fashion', 'UrbanThread', 'A relaxed linen shirt made for hot and humid days when airflow and comfort matter. Its lightweight fabric and loose silhouette work well for vacations, casual offices, weekend gatherings, and everyday summer outfits while maintaining a clean understated appearance.', 54.99, 8, 35, 'pc'],
+  ['Slim Stretch Chino Pants', 'Clothing & Fashion', 'ModernFit', 'Versatile stretch chino pants that bridge casual and smart-casual clothing. Flexible fabric provides comfort while sitting, walking, or commuting, while the clean silhouette works with polo shirts, button-down shirts, T-shirts, and casual shoes.', 59.99, 10, 32, 'pc'],
+  ['Lightweight Windbreaker Jacket', 'Clothing & Fashion', 'TrailWear', 'A lightweight windbreaker for commuting, travel, morning walks, and outdoor activities where protection from wind or light weather is useful. It packs easily into a small bag and layers comfortably over T-shirts or activewear without the bulk of a heavy jacket.', 74.99, 12, 24, 'pc'],
+  ['Everyday Walking Sneakers', 'Clothing & Fashion', 'StepWell', 'Comfort-focused walking sneakers for commuting, shopping, travel, and daily city movement. A cushioned sole and breathable upper support repeated use, while neutral styling makes the shoes easy to pair with jeans, chinos, shorts, and casual athletic clothing.', 79.99, 10, 28, 'pair'],
+  ['Trail Running Shoes', 'Clothing & Fashion', 'TrailWear', 'Durable running shoes for outdoor trails, long-distance jogging, and mixed terrain. The supportive midsole provides cushioning for extended movement while the textured outsole improves traction on dirt paths and uneven surfaces, giving runners more protection than ordinary road shoes.', 119.99, 15, 20, 'pair'],
+  ['Sweet Red Apples', 'Fruits & Vegetables', 'Fresh Farm', 'Crisp, juicy red apples with naturally sweet flavor and refreshing texture. They are convenient for breakfast, lunch boxes, office snacks, or slicing into salads and desserts. Their firm flesh makes them a useful everyday fruit for families.', 4.99, 0, 100, 'kg'],
+  ['Organic Bananas', 'Fruits & Vegetables', 'Organic Valley', 'Naturally sweet bananas with soft texture for breakfast, smoothies, snacks, and baking. They are easy to eat on the go and combine well with oats, yogurt, peanut butter, or other fruit when preparing a quick and filling meal.', 3.49, 10, 75, 'kg'],
+  ['Creamy Hass Avocado', 'Fruits & Vegetables', 'Nature Harvest', 'Ripe Hass avocados with creamy texture and mild flavor, suitable for toast, salads, sandwiches, guacamole, and smoothies. Their rich texture makes them useful in savory recipes and breakfast dishes when you want a filling fresh ingredient.', 6.99, 5, 60, 'kg'],
+  ['Sweet Valencia Oranges', 'Fruits & Vegetables', 'SunFresh', 'Juicy Valencia oranges with bright citrus flavor and refreshing sweetness. They can be eaten fresh, squeezed into juice, or added to fruit salads and breakfast bowls. Their fragrant flavor is especially suitable for refreshing drinks and warm-weather snacks.', 4.49, 0, 90, 'kg'],
+  ['Fresh Broccoli Florets', 'Fruits & Vegetables', 'Green Valley', 'Fresh green broccoli florets prepared for convenient cooking. They work well steamed, roasted, stir-fried, or added to soups, pasta, rice dishes, and meal-prep containers, making them a versatile vegetable for families and everyday meals.', 3.99, 8, 45, 'kg'],
+  ['Ripe Sweet Strawberries', 'Fruits & Vegetables', 'Berry Best', 'Sweet ripe strawberries with bright aroma and juicy texture. They are ideal for breakfast bowls, smoothies, desserts, yogurt, fruit salads, and simple snacks. They pair particularly well with bananas, oats, and yogurt in refreshing smoothies.', 5.99, 12, 40, 'kg'],
+  ['Tropical Ripe Mangoes', 'Fruits & Vegetables', 'Tropical Harvest', 'Sweet ripe mangoes with fragrant tropical flavor and soft juicy flesh. They are excellent for fresh snacks, smoothies, fruit salads, desserts, and chilled drinks, especially when you want a naturally sweet ingredient for a refreshing warm-weather recipe.', 5.49, 0, 55, 'kg'],
+  ['Classic Potato Chips', 'Food & Beverages', "Lay's", 'Crispy thin-cut potato chips with classic savory and lightly salted flavor. They are convenient for movie nights, casual gatherings, office snacks, picnics, and quick breaks when you want a crunchy ready-to-eat snack without preparation.', 2.49, 10, 120, 'pc'],
+  ['Oat Granola Energy Bars', 'Food & Beverages', 'Nature Valley', 'Convenient oat and nut-based snack bars for busy mornings, commuting, hiking, study sessions, and afternoon breaks. Their compact format makes them easy to carry when you need a practical snack without preparing a full meal.', 4.59, 10, 65, 'pc'],
+  ['Smooth Cold Brew Coffee', 'Food & Beverages', 'Starbucks', 'A smooth ready-to-drink cold brew coffee for work, study, commuting, or afternoon breaks. Its chilled bottled format requires no brewing equipment and can be enjoyed directly from the refrigerator when you want a convenient coffee beverage.', 4.99, 10, 50, 'pc'],
+  ['Frozen Margherita Pizza', 'Food & Beverages', 'DiGiorno', 'A convenient frozen Margherita pizza with tomato sauce, mozzarella, and a simple savory profile. It is designed for quick home meals when you want something easy to prepare after work or during a relaxed evening without cooking a full recipe from scratch.', 8.99, 20, 35, 'pc'],
+  ['Premium Frozen Salmon Fillet', 'Food & Beverages', 'SeaHarvest', 'Premium frozen salmon fillets suitable for grilling, pan-searing, baking, and simple home meal preparation. The frozen format makes it easy to keep a versatile seafood ingredient available for weeknight dinners, rice bowls, salads, and vegetable-based meals.', 12.99, 10, 25, 'pc'],
+  ['Gentle Daily Facial Cleanser', 'Personal Care', 'Cetaphil', 'A gentle facial cleanser for everyday skincare routines. It helps remove ordinary dirt, excess oil, and daily residue without being positioned as a harsh treatment product. It fits a basic routine before moisturizer or other skincare steps.', 8.99, 15, 35, 'pc'],
+  ['Hydrating Body Wash', 'Personal Care', 'Dove', 'A moisturizing body wash for daily showers and regular personal hygiene. Its creamy cleansing format suits people who prefer a comfortable shower routine and want a practical product for everyday use after exercise, work, or outdoor activities.', 7.49, 5, 50, 'pc'],
+  ['Nourishing Hair Conditioner', 'Personal Care', 'Dove', 'A daily hair conditioner for a softer and smoother hair-care routine. It is useful after shampooing when hair feels dry or difficult to manage, and it fits simple morning or evening grooming routines without requiring a complicated multi-step process.', 6.99, 10, 45, 'pc'],
+  ['Fresh Mint Toothpaste', 'Personal Care', 'Colgate', 'A mint-flavored toothpaste intended for routine oral hygiene. It provides a familiar fresh sensation after brushing and is designed as an everyday bathroom essential for morning and evening brushing rather than a specialized dental treatment.', 3.99, 0, 75, 'pc'],
+  ['Daily Mineral Sunscreen SPF 50', 'Personal Care', 'SunGuard', 'A lightweight daily sunscreen for outdoor routines such as commuting, walking, travel, and recreation. The high-SPF format is useful for people who want a dedicated sun-protection step before spending time outside during bright daytime conditions.', 14.99, 12, 30, 'pc'],
+  ['Soothing Aloe Body Lotion', 'Personal Care', 'PureCare', 'A lightweight body lotion with an aloe-inspired soothing profile for everyday moisturizing after showers or whenever skin feels dry. It is convenient for simple daily grooming routines and can be used on arms, legs, and other areas needing regular moisturization.', 9.49, 8, 38, 'pc'],
+];
 
 const seedProducts = async () => {
   try {
-    const existingAdmin = await db
-      .select({ id: users._id })
-      .from(users)
-      .where(eq(users.email, ADMIN_EMAIL))
-      .limit(1);
-
+    const existingAdmin = await db.select({ id: users._id }).from(users).where(eq(users.email, ADMIN_EMAIL)).limit(1);
     let adminId = existingAdmin[0]?.id;
 
     if (!adminId) {
+      if (!ADMIN_PASSWORD) throw new Error('SEED_ADMIN_PASSWORD is required when no admin user exists.');
       const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, 12);
-
-      const [admin] = await db
-        .insert(users)
-        .values({
-          name: 'Admin',
-          email: ADMIN_EMAIL,
-          password: hashedPassword,
-          role: 'admin',
-        })
-        .returning({ id: users._id });
-
+      const [admin] = await db.insert(users).values({ name: 'Admin', email: ADMIN_EMAIL, password: hashedPassword, role: 'admin' }).returning({ id: users._id });
       adminId = admin.id;
-      console.log(`Admin created: ${ADMIN_EMAIL}`);
-    } else {
-      console.log(`Admin already exists: ${ADMIN_EMAIL}`);
     }
 
-    const categoryNames = [
-      ...new Set(productsData.map((product) => product[1])),
-    ];
-
-    const categoryRows = await db
-      .select({
-        id: categories._id,
-        name: categories.name,
-      })
-      .from(categories)
-      .where(inArray(categories.name, categoryNames));
-
-    const categoryMap = new Map(
-      categoryRows.map((category) => [category.name, category.id]),
-    );
-
-    const missingCategories = categoryNames.filter(
-      (categoryName) => !categoryMap.has(categoryName),
-    );
-
-    if (missingCategories.length > 0) {
-      throw new Error(
-        `Missing categories: ${missingCategories.join(', ')}. Run "pnpm seed:categories" first.`,
-      );
-    }
+    const categoryNames = [...new Set(productsData.map((product) => product[1]))];
+    const categoryRows = await db.select({ id: categories._id, name: categories.name }).from(categories).where(inArray(categories.name, categoryNames));
+    const categoryMap = new Map(categoryRows.map((category) => [category.name, category.id]));
+    const missing = categoryNames.filter((name) => !categoryMap.has(name));
+    if (missing.length) throw new Error(`Missing categories: ${missing.join(', ')}. Run "pnpm seed:categories" first.`);
 
     await db.delete(products);
-    console.log('Existing products cleared');
-
-    const productRows = productsData.map(
-      ([
-        name,
-        category,
-        description,
-        image,
-        originalPrice,
-        discountPercent,
-        stockCount,
-        unit,
-        isActive,
-      ]) => {
-        const categoryId = categoryMap.get(category);
-
-        if (!categoryId) {
-          throw new Error(`Category not found: ${category}`);
-        }
-
-        return {
-          userId: adminId,
-          categoryId,
-          name,
-          slug: slugify(name, { lower: true, strict: true }),
-          description,
-          images: [image],
-          originalPrice,
-          salePrice: originalPrice * (1 - discountPercent / 100),
-          discountPercent,
-          discountLabel: discountPercent > 0 ? `${discountPercent}% OFF` : null,
-          stockCount,
-          unit,
-          isActive,
-          ratingAverage: 0,
-          reviewCount: 0,
-        };
-      },
-    );
-
-    const created = await db
-      .insert(products)
-      .values(productRows)
-      .returning({ id: products._id });
-
+    const rows = productsData.map(([name, category, brand, description, originalPrice, discountPercent, stockCount, unit]) => {
+      const categoryId = categoryMap.get(category);
+      if (!categoryId) throw new Error(`Category not found: ${category}`);
+      return { userId: adminId, categoryId, name, brand, slug: slugify(name, { lower: true, strict: true }), description, images: [], originalPrice, salePrice: originalPrice * (1 - discountPercent / 100), discountPercent, discountLabel: discountPercent > 0 ? `${discountPercent}% OFF` : null, stockCount, unit, isActive: true, ratingAverage: 0, reviewCount: 0 };
+    });
+    const created = await db.insert(products).values(rows).returning({ id: products._id });
     console.log(`${created.length} products seeded successfully`);
   } catch (error) {
     console.error('Seed failed:', error);
@@ -659,4 +76,4 @@ const seedProducts = async () => {
   }
 };
 
-seedProducts();
+void seedProducts();

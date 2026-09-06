@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 import { embeddingConfig } from '../config/embedding.config';
 import { db } from '../db';
@@ -13,21 +13,6 @@ export type ProductEmbeddingResult = {
 };
 
 export class ProductEmbeddingService {
-  async exists(productId: string): Promise<boolean> {
-    const [row] = await db
-      .select({ id: productEmbeddings._id })
-      .from(productEmbeddings)
-      .where(
-        and(
-          eq(productEmbeddings.productId, productId),
-          eq(productEmbeddings.model, embeddingConfig.model),
-        ),
-      )
-      .limit(1);
-
-    return Boolean(row);
-  }
-
   async generate(productId: string): Promise<ProductEmbeddingResult | null> {
     const [product] = await db
       .select({

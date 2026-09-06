@@ -35,16 +35,36 @@ The command is a backend script, not a public HTTP endpoint.
 - Re-running the command is safe: the `(product_id, model)` unique constraint prevents duplicate rows and existing embeddings are skipped.
 - A final summary reports processed, generated, skipped, and failed products.
 
-If products fail because of Gemini rate limits or a temporary provider problem, resolve the provider issue and run the same command again. Previously successful embeddings are skipped.
+## Canonical product representation
+
+The embedding text is built from the product's semantic fields:
+
+- product name
+- brand
+- description
+- category
+- unit
+
+Therefore product brand data must be populated before running the backfill.
 
 ## Product lifecycle
 
 New products generate an embedding after the product row is committed. If Gemini fails, product creation remains successful and the product can be recovered by running the backfill.
 
-Product updates regenerate embeddings only when the canonical semantic fields change (`name`, `description`, `categoryId`, or `unit`). Non-semantic changes such as price, stock, images, discount, rating, or active state do not trigger regeneration.
+Product updates regenerate embeddings when the canonical semantic fields change (`name`, `description`, `brand`, `categoryId`, or `unit`). Non-semantic changes such as price, stock, images, discount, rating, or active state do not trigger regeneration.
 
 Product deletion relies on the PostgreSQL foreign-key `ON DELETE CASCADE` from `product_embeddings.product_id` to `products.id`.
 
-## Current schema limitation
+## Seed order
 
-The current `products` table does not contain `brand` or a generic product-attributes column. Those fields are therefore not included in the embedding representation. If they are added to the product schema later, the canonical embedding text and semantic-change detection should be updated together, followed by a backfill.
+The product seed now stores brand together with each product, so a separate `product-brand.seed.ts` script is no longer required.
+
+For a fresh local database:
+
+```text
+pnpm seed:categories
+pnpm seed:products
+pnpm backfill:product-embeddings
+```
+
+If no admin user exists yet, `product.seed.ts` creates one using `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD` from the backend environment.
