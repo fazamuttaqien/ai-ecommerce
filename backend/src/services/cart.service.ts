@@ -146,10 +146,12 @@ export const upsertCartService = async (
   }));
   return {
     cart: { ...updatedCart, items: populatedItems },
-    ...calculateCartTotals(updatedCart.items.map((item) => ({
-      productId: item.product,
-      quantity: item.quantity,
-    }))),
+    ...calculateCartTotals(
+      updatedCart.items.map((item) => ({
+        productId: item.product,
+        quantity: item.quantity,
+      })),
+    ),
   };
 };
 
@@ -169,10 +171,12 @@ export const getCartService = async (
   }));
   return {
     cart: { ...loaded, items: populatedItems },
-    ...calculateCartTotals(loaded.items.map((item) => ({
-      productId: item.product,
-      quantity: item.quantity,
-    }))),
+    ...calculateCartTotals(
+      loaded.items.map((item) => ({
+        productId: item.product,
+        quantity: item.quantity,
+      })),
+    ),
   };
 };
 

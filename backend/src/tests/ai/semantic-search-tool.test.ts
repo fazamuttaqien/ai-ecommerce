@@ -41,7 +41,8 @@ const baseDependencies = (): SemanticSearchToolDependencies => ({
 
 async function testSemanticQueryAndFilters(): Promise<void> {
   const dependencies = baseDependencies();
-  let received: Parameters<SemanticSearchToolDependencies['search']>[0] | undefined;
+  let received:
+    Parameters<SemanticSearchToolDependencies['search']>[0] | undefined;
   dependencies.search = async (input) => {
     received = input;
     return searchResult;
@@ -59,7 +60,10 @@ async function testSemanticQueryAndFilters(): Promise<void> {
     dependencies,
   );
 
-  assert.equal(received?.query, 'laptop for a programmer with a limited budget');
+  assert.equal(
+    received?.query,
+    'laptop for a programmer with a limited budget',
+  );
   assert.equal(received?.categoryId, 'laptops');
   assert.equal(received?.brand, 'TechBrand');
   assert.equal(received?.minPrice, 500);
@@ -112,7 +116,11 @@ async function testSearchFailureIsControlled(): Promise<void> {
   };
 
   await assert.rejects(
-    () => executeSemanticSearchProducts({ query: 'smartphone for photography' }, dependencies),
+    () =>
+      executeSemanticSearchProducts(
+        { query: 'smartphone for photography' },
+        dependencies,
+      ),
     /Semantic product search failed/,
   );
 }

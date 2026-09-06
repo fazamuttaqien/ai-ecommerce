@@ -51,7 +51,11 @@ const createService = (
   searchConfig = config(),
 ): HybridSearchService =>
   new HybridSearchService(
-    { async search() { return keywordItems; } },
+    {
+      async search() {
+        return keywordItems;
+      },
+    },
     {
       async search() {
         return {
@@ -92,9 +96,10 @@ const run = async (): Promise<void> => {
 
   // 2. Keyword search menghasilkan produk.
   {
-    const result = await createService([
-      product({ id: 'keyword-1', name: 'Sepatu Running', keywordScore: 1 }),
-    ], []).search({ query: 'sepatu running' });
+    const result = await createService(
+      [product({ id: 'keyword-1', name: 'Sepatu Running', keywordScore: 1 })],
+      [],
+    ).search({ query: 'sepatu running' });
     assert.deepEqual(ids(result), ['keyword-1']);
     assert.equal(result[0]?.keywordScore, 1);
     assert.equal(result[0]?.semanticScore, 0);
@@ -102,9 +107,10 @@ const run = async (): Promise<void> => {
 
   // 3. Semantic search menghasilkan produk.
   {
-    const result = await createService([], [
-      product({ id: 'semantic-1', name: 'Sepatu Trail', similarity: 0.9 }),
-    ]).search({ query: 'sepatu untuk lari jarak jauh' });
+    const result = await createService(
+      [],
+      [product({ id: 'semantic-1', name: 'Sepatu Trail', similarity: 0.9 })],
+    ).search({ query: 'sepatu untuk lari jarak jauh' });
     assert.deepEqual(ids(result), ['semantic-1']);
     assert.equal(result[0]?.semanticScore, 0.9);
     assert.equal(result[0]?.keywordScore, 0);
@@ -112,18 +118,35 @@ const run = async (): Promise<void> => {
 
   // 4. Salah satu source kosong.
   {
-    const keywordOnly = await createService([
-      product({ id: 'keyword-only', name: 'Laptop Murah', keywordScore: 0.8 }),
-    ], []).search({ query: 'laptop' });
-    const semanticOnly = await createService([], [
-      product({ id: 'semantic-only', name: 'Laptop Programming', similarity: 0.8 }),
-    ]).search({ query: 'laptop programming' });
+    const keywordOnly = await createService(
+      [
+        product({
+          id: 'keyword-only',
+          name: 'Laptop Murah',
+          keywordScore: 0.8,
+        }),
+      ],
+      [],
+    ).search({ query: 'laptop' });
+    const semanticOnly = await createService(
+      [],
+      [
+        product({
+          id: 'semantic-only',
+          name: 'Laptop Programming',
+          similarity: 0.8,
+        }),
+      ],
+    ).search({ query: 'laptop programming' });
     assert.deepEqual(ids(keywordOnly), ['keyword-only']);
     assert.deepEqual(ids(semanticOnly), ['semantic-only']);
   }
 
   // 5. Kedua source kosong.
-  assert.deepEqual(ids(await createService([], []).search({ query: 'produk tidak ada' })), []);
+  assert.deepEqual(
+    ids(await createService([], []).search({ query: 'produk tidak ada' })),
+    [],
+  );
 
   // 6. Produk yang sama muncul di kedua source.
   {
@@ -155,10 +178,19 @@ const run = async (): Promise<void> => {
   // 9. Semantic-only product tetap muncul.
   {
     const result = await createService(
-      [product({ id: 'keyword-only', name: 'Running Shoes', keywordScore: 0.9 })],
+      [
+        product({
+          id: 'keyword-only',
+          name: 'Running Shoes',
+          keywordScore: 0.9,
+        }),
+      ],
       [product({ id: 'semantic-only', name: 'Trail Shoes', similarity: 0.9 })],
     ).search({ query: 'running shoes' });
-    assert.deepEqual(new Set(ids(result)), new Set(['keyword-only', 'semantic-only']));
+    assert.deepEqual(
+      new Set(ids(result)),
+      new Set(['keyword-only', 'semantic-only']),
+    );
   }
 
   // 10. Exact query "iPhone 15" mendapat keyword score tertinggi.
@@ -176,27 +208,36 @@ const run = async (): Promise<void> => {
 
   // 11. Keyword query "sepatu running".
   {
-    const result = await createService([
-      product({ id: 'running', name: 'Sepatu Running', keywordScore: 1 }),
-    ], []).search({ query: 'sepatu running' });
+    const result = await createService(
+      [product({ id: 'running', name: 'Sepatu Running', keywordScore: 1 })],
+      [],
+    ).search({ query: 'sepatu running' });
     assert.equal(result[0]?.name, 'Sepatu Running');
     assert.equal(result[0]?.keywordScore, 1);
   }
 
   // 12. Semantic query "sepatu untuk lari jarak jauh".
   {
-    const result = await createService([], [
-      product({ id: 'long-run', name: 'Sepatu Marathon', similarity: 0.93 }),
-    ]).search({ query: 'sepatu untuk lari jarak jauh' });
+    const result = await createService(
+      [],
+      [product({ id: 'long-run', name: 'Sepatu Marathon', similarity: 0.93 })],
+    ).search({ query: 'sepatu untuk lari jarak jauh' });
     assert.equal(result[0]?.name, 'Sepatu Marathon');
     assert.equal(result[0]?.semanticScore, 0.93);
   }
 
   // 13. Natural-language query "laptop murah untuk programming".
   {
-    const result = await createService([], [
-      product({ id: 'programming', name: 'Laptop Budget Developer', similarity: 0.91 }),
-    ]).search({ query: 'laptop murah untuk programming' });
+    const result = await createService(
+      [],
+      [
+        product({
+          id: 'programming',
+          name: 'Laptop Budget Developer',
+          similarity: 0.91,
+        }),
+      ],
+    ).search({ query: 'laptop murah untuk programming' });
     assert.equal(result[0]?.id, 'programming');
     assert.equal(result[0]?.semanticScore, 0.91);
   }
@@ -204,8 +245,20 @@ const run = async (): Promise<void> => {
   // 14. Ranking hybridScore benar.
   {
     const result = await createService(
-      [product({ id: 'keyword-high', name: 'Keyword High', keywordScore: 0.9 })],
-      [product({ id: 'semantic-high', name: 'Semantic High', similarity: 0.8 })],
+      [
+        product({
+          id: 'keyword-high',
+          name: 'Keyword High',
+          keywordScore: 0.9,
+        }),
+      ],
+      [
+        product({
+          id: 'semantic-high',
+          name: 'Semantic High',
+          similarity: 0.8,
+        }),
+      ],
       config(0.6, 0.4),
     ).search({ query: 'ranking' });
     assertHybridScore(result[0]!, 0.6, 0.4);
@@ -245,7 +298,12 @@ const run = async (): Promise<void> => {
 
   // 17. minPrice dan maxPrice tervalidasi.
   await assert.rejects(
-    () => createService([], []).search({ query: 'laptop', minPrice: 200, maxPrice: 100 }),
+    () =>
+      createService([], []).search({
+        query: 'laptop',
+        minPrice: 200,
+        maxPrice: 100,
+      }),
     /minPrice must be less than or equal to maxPrice/,
   );
 

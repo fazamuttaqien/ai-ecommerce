@@ -23,7 +23,9 @@ const semanticWeight = parseWeight('HYBRID_SEARCH_SEMANTIC_WEIGHT', 0.5);
 const totalWeight = keywordWeight + semanticWeight;
 
 if (totalWeight <= 0) {
-  throw new Error('At least one hybrid search weight must be greater than zero');
+  throw new Error(
+    'At least one hybrid search weight must be greater than zero',
+  );
 }
 
 export const hybridSearchConfig = {

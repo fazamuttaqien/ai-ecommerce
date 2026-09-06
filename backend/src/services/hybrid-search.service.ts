@@ -93,8 +93,7 @@ const calculateHybridScore = (
   // Hybrid score = normalized keyword score × keyword weight
   //               + Gemini similarity × semantic weight.
   return (
-    keywordScore * config.keywordWeight +
-    semanticScore * config.semanticWeight
+    keywordScore * config.keywordWeight + semanticScore * config.semanticWeight
   );
 };
 
@@ -103,10 +102,14 @@ const hasValidProductId = (id: unknown): id is string =>
 
 export class HybridSearchService {
   constructor(
-    private readonly keywordSearch: Pick<KeywordProductSearchService, 'search'> =
-      keywordProductSearchService,
-    private readonly semanticSearch: Pick<SemanticSearchService, 'search'> =
-      semanticSearchService,
+    private readonly keywordSearch: Pick<
+      KeywordProductSearchService,
+      'search'
+    > = keywordProductSearchService,
+    private readonly semanticSearch: Pick<
+      SemanticSearchService,
+      'search'
+    > = semanticSearchService,
     private readonly config: HybridSearchConfig = hybridSearchConfig,
   ) {}
 

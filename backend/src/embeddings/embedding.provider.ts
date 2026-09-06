@@ -1,6 +1,4 @@
-export type EmbeddingTaskType =
-  | 'RETRIEVAL_DOCUMENT'
-  | 'RETRIEVAL_QUERY';
+export type EmbeddingTaskType = 'RETRIEVAL_DOCUMENT' | 'RETRIEVAL_QUERY';
 
 export interface EmbeddingProvider {
   readonly name: string;

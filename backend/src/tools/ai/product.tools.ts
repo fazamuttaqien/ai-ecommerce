@@ -156,9 +156,9 @@ const parseToolInput = <T>(
 const shouldUseHybridSearch = (input: SearchProductsToolInput): boolean =>
   Boolean(
     input.keyword &&
-      input.sort === 'best-match' &&
-      input.hasDiscount === undefined &&
-      input.inStock === undefined,
+    input.sort === 'best-match' &&
+    input.hasDiscount === undefined &&
+    input.inStock === undefined,
   );
 
 export const executeSearchProducts = async (

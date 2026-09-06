@@ -49,10 +49,14 @@ export type SemanticSearchResponse = {
 
 export class SemanticSearchService {
   constructor(
-    private readonly embeddings: Pick<EmbeddingService, 'embedQueryOrThrow'> =
-      embeddingService,
-    private readonly repository: Pick<SemanticSearchRepository, 'search'> =
-      semanticSearchRepository,
+    private readonly embeddings: Pick<
+      EmbeddingService,
+      'embedQueryOrThrow'
+    > = embeddingService,
+    private readonly repository: Pick<
+      SemanticSearchRepository,
+      'search'
+    > = semanticSearchRepository,
   ) {}
 
   async search(input: SemanticSearchInput): Promise<SemanticSearchResponse> {
