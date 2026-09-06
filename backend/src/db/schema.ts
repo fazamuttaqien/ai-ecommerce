@@ -6,6 +6,7 @@ import {
   pgEnum,
   pgTable,
   real,
+  sql,
   text,
   timestamp,
   unique,
@@ -45,7 +46,7 @@ export const products = pgTable('products', {
   description: text('description'),
   images: text('images').array().notNull().default([]),
   originalPrice: real('original_price').notNull(), salePrice: real('sale_price').notNull().default(0), discountPercent: real('discount_percent').notNull().default(0), discountLabel: text('discount_label'), unit: text('unit').notNull().default('pc'), stockCount: integer('stock_count').notNull().default(0), ratingAverage: real('rating_average').notNull().default(0), reviewCount: integer('review_count').notNull().default(0), isActive: boolean('is_active').notNull().default(true), ...timestamps,
-}, (table) => [index('products_category_id_idx').on(table.categoryId), index('products_brand_idx').on(table.brand), index('products_is_active_idx').on(table.isActive)]);
+}, (table) => [index('products_category_id_idx').on(table.categoryId), index('products_brand_idx').on(table.brand), index('products_is_active_idx').on(table.isActive), index('products_name_trgm_idx').using('gin', sql`${table.name} gin_trgm_ops`), index('products_brand_trgm_idx').using('gin', sql`${table.brand} gin_trgm_ops`), index('products_description_trgm_idx').using('gin', sql`${table.description} gin_trgm_ops`)]);
 
 export const productEmbeddings = pgTable('product_embeddings', {
   _id: uuid('id').primaryKey().defaultRandom(), productId: uuid('product_id').notNull().references(() => products._id, { onDelete: 'cascade' }), embedding: vector('embedding', { dimensions: 1536 }).notNull(), model: text('model').notNull(), ...timestamps,
