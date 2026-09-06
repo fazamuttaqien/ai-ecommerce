@@ -6,6 +6,10 @@ import {
   getProductReviewsService,
   getProductsService,
 } from '../../services/product.service';
+import {
+  hybridSearchService,
+  type HybridSearchResultItem,
+} from '../../services/hybrid-search.service';
 import type {
   GetProductBySlugInput,
   GetProductReviewsInput,
@@ -64,12 +68,14 @@ type ProductServiceDependencies = {
   getProducts: typeof getProductsService;
   getProductBySlug: typeof getProductBySlugService;
   getProductReviews: typeof getProductReviewsService;
+  hybridSearch: typeof hybridSearchService.search;
 };
 
 const defaultDependencies: ProductServiceDependencies = {
   getProducts: getProductsService,
   getProductBySlug: getProductBySlugService,
   getProductReviews: getProductReviewsService,
+  hybridSearch: hybridSearchService.search.bind(hybridSearchService),
 };
 
 const toId = (value: unknown): string => String(value);
@@ -101,6 +107,32 @@ const mapProduct = (product: Record<string, unknown>) => ({
   category: mapCategory(product.category ?? product.categoryId),
 });
 
+const mapHybridProduct = (product: HybridSearchResultItem) => ({
+  _id: product.id,
+  name: product.name,
+  slug: product.slug,
+  images: product.images,
+  description: product.description,
+  originalPrice: product.originalPrice,
+  salePrice: product.salePrice,
+  discountPercent: product.discountPercent,
+  discountLabel: product.discountLabel,
+  unit: product.unit,
+  stockCount: product.stockCount,
+  ratingAverage: product.ratingAverage,
+  reviewCount: product.reviewCount,
+  category: product.category
+    ? {
+        _id: product.category.id,
+        name: product.category.name,
+        slug: product.category.slug,
+      }
+    : null,
+  keywordScore: product.keywordScore,
+  semanticScore: product.semanticScore,
+  hybridScore: product.hybridScore,
+});
+
 const toControlledToolError = (error: unknown, operation: string): Error => {
   if (error instanceof AppError) {
     return new Error(`${operation} failed: ${error.message}`);
@@ -121,6 +153,14 @@ const parseToolInput = <T>(
   }
 };
 
+const shouldUseHybridSearch = (input: SearchProductsToolInput): boolean =>
+  Boolean(
+    input.keyword &&
+      input.sort === 'best-match' &&
+      input.hasDiscount === undefined &&
+      input.inStock === undefined,
+  );
+
 export const executeSearchProducts = async (
   rawInput: unknown,
   dependencies: ProductServiceDependencies = defaultDependencies,
@@ -130,6 +170,32 @@ export const executeSearchProducts = async (
     rawInput,
     'Product search',
   );
+
+  if (shouldUseHybridSearch(input)) {
+    try {
+      const result = await dependencies.hybridSearch({
+        query: input.keyword!,
+        categoryId: input.categoryId,
+        minPrice: input.minPrice,
+        maxPrice: input.maxPrice,
+        limit: input.limit,
+      });
+
+      return {
+        products: result.map(mapHybridProduct),
+        pagination: {
+          page: 1,
+          limit: input.limit,
+          total: result.length,
+          totalPages: result.length > 0 ? 1 : 0,
+          hasNextPage: false,
+        },
+      };
+    } catch (error) {
+      throw toControlledToolError(error, 'Product search');
+    }
+  }
+
   const serviceInput = getProductsSchema.parse({
     ...input,
     page: 1,
@@ -226,7 +292,7 @@ export const createAIShoppingTools = (
 ) => ({
   search_products: tool({
     description:
-      'Search active products using keyword, category, price, discount, stock, and sorting filters. Read-only.',
+      'Search active products. For keyword queries with best-match sorting, uses hybrid keyword + semantic search. Supports category and price filters. For discount, stock, or explicit price/rating sorting, uses the catalog search. Read-only.',
     inputSchema: searchProductsInputSchema,
     execute: (input) => executeSearchProducts(input, dependencies),
   }),
