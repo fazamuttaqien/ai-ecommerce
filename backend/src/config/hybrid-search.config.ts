@@ -1,9 +1,21 @@
 const parseWeight = (name: string, fallback: number): number => {
   const value = Number(process.env[name] ?? fallback);
+
   if (!Number.isFinite(value) || value < 0) {
     throw new Error(`${name} must be a non-negative number`);
   }
+
   return value;
+};
+
+const parseCandidateLimit = (name: string, fallback: number): number => {
+  const value = Number(process.env[name] ?? fallback);
+
+  if (!Number.isInteger(value) || value < 1) {
+    throw new Error(`${name} must be a positive integer`);
+  }
+
+  return Math.min(value, 100);
 };
 
 const keywordWeight = parseWeight('HYBRID_SEARCH_KEYWORD_WEIGHT', 0.5);
@@ -17,8 +29,5 @@ if (totalWeight <= 0) {
 export const hybridSearchConfig = {
   keywordWeight: keywordWeight / totalWeight,
   semanticWeight: semanticWeight / totalWeight,
-  candidateLimit: Math.min(
-    Math.max(Number(process.env.HYBRID_SEARCH_CANDIDATE_LIMIT ?? 50), 1),
-    100,
-  ),
+  candidateLimit: parseCandidateLimit('HYBRID_SEARCH_CANDIDATE_LIMIT', 50),
 };
