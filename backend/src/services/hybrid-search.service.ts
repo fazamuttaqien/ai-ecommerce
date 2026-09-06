@@ -1,12 +1,20 @@
 import {
   keywordProductSearchService,
   type KeywordProductSearchResultItem,
+  type KeywordProductSearchService,
 } from './keyword-product-search.service';
 import {
   semanticSearchService,
   type SemanticSearchResultItem,
+  type SemanticSearchService,
 } from './semantic-search.service';
 import { hybridSearchConfig } from '../config/hybrid-search.config';
+
+type HybridSearchConfig = {
+  keywordWeight: number;
+  semanticWeight: number;
+  candidateLimit: number;
+};
 
 export type HybridSearchInput = {
   query: string;
@@ -80,16 +88,28 @@ const mergeHybridProduct = (
 const calculateHybridScore = (
   keywordScore: number,
   semanticScore: number,
+  config: HybridSearchConfig,
 ): number => {
   // Hybrid score = normalized keyword score × keyword weight
   //               + Gemini similarity × semantic weight.
   return (
-    keywordScore * hybridSearchConfig.keywordWeight +
-    semanticScore * hybridSearchConfig.semanticWeight
+    keywordScore * config.keywordWeight +
+    semanticScore * config.semanticWeight
   );
 };
 
+const hasValidProductId = (id: unknown): id is string =>
+  typeof id === 'string' && id.trim().length > 0;
+
 export class HybridSearchService {
+  constructor(
+    private readonly keywordSearch: Pick<KeywordProductSearchService, 'search'> =
+      keywordProductSearchService,
+    private readonly semanticSearch: Pick<SemanticSearchService, 'search'> =
+      semanticSearchService,
+    private readonly config: HybridSearchConfig = hybridSearchConfig,
+  ) {}
+
   async search(input: HybridSearchInput): Promise<HybridSearchResultItem[]> {
     const query = input.query.trim();
     if (!query) throw new Error('Hybrid search query is required');
@@ -102,10 +122,10 @@ export class HybridSearchService {
     }
 
     const limit = Math.min(Math.max(input.limit ?? 10, 1), 20);
-    const candidateLimit = Math.max(limit, hybridSearchConfig.candidateLimit);
+    const candidateLimit = Math.max(limit, this.config.candidateLimit);
 
     const [keywordItems, semanticResult] = await Promise.all([
-      keywordProductSearchService.search({
+      this.keywordSearch.search({
         query,
         categoryId: input.categoryId,
         brand: input.brand,
@@ -113,7 +133,7 @@ export class HybridSearchService {
         maxPrice: input.maxPrice,
         candidateLimit,
       }),
-      semanticSearchService.search({
+      this.semanticSearch.search({
         query,
         categoryId: input.categoryId,
         brand: input.brand,
@@ -127,6 +147,8 @@ export class HybridSearchService {
     const merged = new Map<string, HybridSearchResultItem>();
 
     for (const product of keywordItems) {
+      if (!hasValidProductId(product.id)) continue;
+
       const hybridProduct = toHybridProduct(product);
       const keywordScore = clampScore(product.keywordScore);
       const semanticScore = 0;
@@ -135,11 +157,17 @@ export class HybridSearchService {
         ...hybridProduct,
         keywordScore,
         semanticScore,
-        hybridScore: calculateHybridScore(keywordScore, semanticScore),
+        hybridScore: calculateHybridScore(
+          keywordScore,
+          semanticScore,
+          this.config,
+        ),
       });
     }
 
     for (const product of semanticResult.items) {
+      if (!hasValidProductId(product.id)) continue;
+
       const existing = merged.get(product.id);
       const keywordScore = existing?.keywordScore ?? 0;
       // Semantic score must remain the Gemini similarity; do not substitute
@@ -154,7 +182,11 @@ export class HybridSearchService {
         ...mergedProduct,
         keywordScore,
         semanticScore,
-        hybridScore: calculateHybridScore(keywordScore, semanticScore),
+        hybridScore: calculateHybridScore(
+          keywordScore,
+          semanticScore,
+          this.config,
+        ),
       });
     }
 
