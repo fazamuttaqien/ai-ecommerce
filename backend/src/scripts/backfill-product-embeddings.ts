@@ -1,9 +1,9 @@
 import 'dotenv/config';
 
-import { desc } from 'drizzle-orm';
+import { and, desc, eq, isNull } from 'drizzle-orm';
 
 import { embeddingConfig } from '../config/embedding.config';
-import { db, disconnectDatabase, products } from '../db';
+import { db, disconnectDatabase, products, productEmbeddings } from '../db';
 import { productEmbeddingService } from '../services/product-embedding.service';
 
 const BATCH_SIZE = 10;
@@ -36,7 +36,6 @@ const run = async () => {
   let offset = 0;
   let processed = 0;
   let generated = 0;
-  let skipped = 0;
   let failed = 0;
 
   console.log(
@@ -44,9 +43,19 @@ const run = async () => {
   );
 
   while (true) {
+    // Only select products that do not have an embedding for the current model.
+    // The database constraint still guarantees one embedding per product/model.
     const batch = await db
       .select({ id: products._id })
       .from(products)
+      .leftJoin(
+        productEmbeddings,
+        and(
+          eq(productEmbeddings.productId, products._id),
+          eq(productEmbeddings.model, embeddingConfig.model),
+        ),
+      )
+      .where(isNull(productEmbeddings._id))
       .orderBy(desc(products.createdAt))
       .offset(offset)
       .limit(BATCH_SIZE);
@@ -55,13 +64,6 @@ const run = async () => {
 
     for (const product of batch) {
       processed += 1;
-
-      // Idempotency: an existing embedding for the current model does not need
-      // another Gemini request. Lifecycle updates handle future semantic changes.
-      if (await productEmbeddingService.exists(product.id)) {
-        skipped += 1;
-        continue;
-      }
 
       const success = await generateWithRetry(product.id);
       if (success) {
@@ -74,17 +76,17 @@ const run = async () => {
 
     offset += batch.length;
     console.log(
-      `Backfill progress: processed=${processed}, generated=${generated}, skipped=${skipped}, failed=${failed}`,
+      `Backfill progress: processed=${processed}, generated=${generated}, failed=${failed}`,
     );
   }
 
   console.log(
-    `Product embedding backfill completed: processed=${processed}, generated=${generated}, skipped=${skipped}, failed=${failed}`,
+    `Product embedding backfill completed: processed=${processed}, generated=${generated}, failed=${failed}`,
   );
 
   if (failed > 0) {
     console.warn(
-      'Some products failed. Re-run the same command after resolving the Gemini/API issue; existing embeddings will be skipped.',
+      'Some products failed. Re-run the same command after resolving the Gemini/API issue; existing embeddings will not be regenerated.',
     );
   }
 };
