@@ -35,11 +35,15 @@ export type KeywordProductSearchResultItem = {
 const escapeLikePattern = (value: string): string =>
   value.replace(/[\\%_]/g, (character) => `\\${character}`);
 
-const normalizeText = (value: string): string => value.trim().toLocaleLowerCase();
+const normalizeText = (value: string): string =>
+  value.trim().toLocaleLowerCase();
 
 export const calculateKeywordRelevanceScore = (
   query: string,
-  product: Pick<KeywordProductSearchResultItem, 'name' | 'brand' | 'description'>,
+  product: Pick<
+    KeywordProductSearchResultItem,
+    'name' | 'brand' | 'description'
+  >,
 ): number => {
   const normalizedQuery = normalizeText(query);
   const name = normalizeText(product.name);
@@ -84,10 +88,13 @@ export class KeywordProductSearchService {
     const pattern = `%${escapeLikePattern(query)}%`;
     const conditions = [eq(products.isActive, true)];
 
-    if (input.categoryId) conditions.push(eq(products.categoryId, input.categoryId));
+    if (input.categoryId)
+      conditions.push(eq(products.categoryId, input.categoryId));
     if (input.brand) conditions.push(eq(products.brand, input.brand));
-    if (input.minPrice !== undefined) conditions.push(gte(products.salePrice, input.minPrice));
-    if (input.maxPrice !== undefined) conditions.push(lte(products.salePrice, input.maxPrice));
+    if (input.minPrice !== undefined)
+      conditions.push(gte(products.salePrice, input.minPrice));
+    if (input.maxPrice !== undefined)
+      conditions.push(lte(products.salePrice, input.maxPrice));
 
     const keywordCondition = or(
       ilike(products.name, pattern),

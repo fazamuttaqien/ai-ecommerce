@@ -42,7 +42,9 @@ export class ProductEmbeddingService {
       .limit(1);
 
     if (!product) {
-      console.error(`Product embedding skipped: product not found [${productId}]`);
+      console.error(
+        `Product embedding skipped: product not found [${productId}]`,
+      );
       return null;
     }
 

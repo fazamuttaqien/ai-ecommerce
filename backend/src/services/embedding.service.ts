@@ -75,6 +75,4 @@ export class EmbeddingService {
   }
 }
 
-export const embeddingService = new EmbeddingService(
-  createEmbeddingProvider(),
-);
+export const embeddingService = new EmbeddingService(createEmbeddingProvider());

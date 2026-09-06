@@ -80,7 +80,10 @@ export class GeminiEmbeddingProvider implements EmbeddingProvider {
     return this.embed(text, embeddingConfig.taskTypes.query);
   }
 
-  private async embed(text: string, taskType: EmbeddingTaskType): Promise<number[]> {
+  private async embed(
+    text: string,
+    taskType: EmbeddingTaskType,
+  ): Promise<number[]> {
     if (!text.trim()) {
       throw new EmbeddingProviderError(
         'Embedding input must not be empty',

@@ -15,12 +15,7 @@ export const semanticSearchProductsInputSchema = z
     brand: z.string().trim().min(1).optional(),
     minPrice: z.number().finite().min(0).optional(),
     maxPrice: z.number().finite().min(0).optional(),
-    limit: z
-      .number()
-      .int()
-      .min(1)
-      .max(AI_SEMANTIC_SEARCH_LIMIT)
-      .default(10),
+    limit: z.number().int().min(1).max(AI_SEMANTIC_SEARCH_LIMIT).default(10),
   })
   .superRefine((value, ctx) => {
     if (

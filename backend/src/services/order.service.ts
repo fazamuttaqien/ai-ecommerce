@@ -95,20 +95,18 @@ export const createOrderService = async (
   };
   const orderId = crypto.randomUUID();
   await db.transaction(async (tx) => {
-    await tx
-      .insert(orders)
-      .values({
-        _id: orderId,
-        userId,
-        orderNo: generateOrderNo(),
-        shippingAddress,
-        paymentMethod: paymentMethod as PaymentMethod,
-        subtotal: totals.subtotal,
-        deliveryFee: totals.deliveryFee,
-        tax: totals.tax,
-        total: totals.orderTotal,
-        statusHistory: [{ status: ORDER_STATUS.PLACED, date: new Date() }],
-      });
+    await tx.insert(orders).values({
+      _id: orderId,
+      userId,
+      orderNo: generateOrderNo(),
+      shippingAddress,
+      paymentMethod: paymentMethod as PaymentMethod,
+      subtotal: totals.subtotal,
+      deliveryFee: totals.deliveryFee,
+      tax: totals.tax,
+      total: totals.orderTotal,
+      statusHistory: [{ status: ORDER_STATUS.PLACED, date: new Date() }],
+    });
     await tx
       .insert(orderItems)
       .values(newOrderItems.map((item) => ({ ...item, orderId })));

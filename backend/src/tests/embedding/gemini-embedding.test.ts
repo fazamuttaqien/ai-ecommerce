@@ -45,12 +45,14 @@ const tests = [
     name: 'returns embeddings from a configured provider',
     run: async () => {
       const service = new EmbeddingService(successfulProvider);
-      assert.deepEqual(await service.embedDocument('wireless headphones'), [
-        0.1, 0.2, 0.3,
-      ]);
-      assert.deepEqual(await service.embedQuery('headphones for travel'), [
-        0.4, 0.5, 0.6,
-      ]);
+      assert.deepEqual(
+        await service.embedDocument('wireless headphones'),
+        [0.1, 0.2, 0.3],
+      );
+      assert.deepEqual(
+        await service.embedQuery('headphones for travel'),
+        [0.4, 0.5, 0.6],
+      );
     },
   },
   {
