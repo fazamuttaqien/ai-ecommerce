@@ -42,6 +42,9 @@ export type HybridSearchResultItem = HybridProduct & {
   hybridScore: number;
 };
 
+const clampScore = (score: number): number =>
+  Number.isFinite(score) ? Math.max(0, Math.min(1, score)) : 0;
+
 const toHybridProduct = (
   product: KeywordProductSearchResultItem | SemanticSearchResultItem,
 ): HybridProduct => ({
@@ -73,6 +76,18 @@ const mergeHybridProduct = (
   discountLabel: incoming.discountLabel ?? existing.discountLabel,
   category: incoming.category ?? existing.category,
 });
+
+const calculateHybridScore = (
+  keywordScore: number,
+  semanticScore: number,
+): number => {
+  // Hybrid score = normalized keyword score × keyword weight
+  //               + Gemini similarity × semantic weight.
+  return (
+    keywordScore * hybridSearchConfig.keywordWeight +
+    semanticScore * hybridSearchConfig.semanticWeight
+  );
+};
 
 export class HybridSearchService {
   async search(input: HybridSearchInput): Promise<HybridSearchResultItem[]> {
@@ -113,20 +128,23 @@ export class HybridSearchService {
 
     for (const product of keywordItems) {
       const hybridProduct = toHybridProduct(product);
-      const keywordScore = product.keywordScore;
+      const keywordScore = clampScore(product.keywordScore);
+      const semanticScore = 0;
 
       merged.set(product.id, {
         ...hybridProduct,
         keywordScore,
-        semanticScore: 0,
-        hybridScore: keywordScore * hybridSearchConfig.keywordWeight,
+        semanticScore,
+        hybridScore: calculateHybridScore(keywordScore, semanticScore),
       });
     }
 
     for (const product of semanticResult.items) {
       const existing = merged.get(product.id);
       const keywordScore = existing?.keywordScore ?? 0;
-      const semanticScore = product.similarity;
+      // Semantic score must remain the Gemini similarity; do not substitute
+      // keyword rank or another score when similarity is low.
+      const semanticScore = clampScore(product.similarity);
       const hybridProduct = toHybridProduct(product);
       const mergedProduct = existing
         ? mergeHybridProduct(existing, hybridProduct)
@@ -136,9 +154,7 @@ export class HybridSearchService {
         ...mergedProduct,
         keywordScore,
         semanticScore,
-        hybridScore:
-          keywordScore * hybridSearchConfig.keywordWeight +
-          semanticScore * hybridSearchConfig.semanticWeight,
+        hybridScore: calculateHybridScore(keywordScore, semanticScore),
       });
     }
 
@@ -146,9 +162,9 @@ export class HybridSearchService {
       .sort(
         (a, b) =>
           b.hybridScore - a.hybridScore ||
-          b.semanticScore - a.semanticScore ||
+          // Keep stronger keyword matches ahead when hybrid scores tie.
           b.keywordScore - a.keywordScore ||
-          a.name.localeCompare(b.name) ||
+          b.semanticScore - a.semanticScore ||
           a.id.localeCompare(b.id),
       )
       .slice(0, limit);
