@@ -123,14 +123,7 @@ const run = async (): Promise<void> => {
   }
 
   // 5. Kedua source kosong.
-  assert.deepEqual(
-    await createService([], []).then(() => []),
-    [],
-  );
-  assert.deepEqual(
-    ids(await createService([], []).search({ query: 'produk tidak ada' })),
-    [],
-  );
+  assert.deepEqual(ids(await createService([], []).search({ query: 'produk tidak ada' })), []);
 
   // 6. Produk yang sama muncul di kedua source.
   {
