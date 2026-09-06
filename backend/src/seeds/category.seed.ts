@@ -4,51 +4,11 @@ import { db } from '../db';
 import { categories } from '../db/schema';
 
 const categoriesData = [
-  [
-    'Beverages',
-    'https://res.cloudinary.com/dp9vvlndo/image/upload/v1781265027/Beverages_lcunrb.png',
-    'Drinks, juices, and everyday refreshments.',
-  ],
-  [
-    'Snacks',
-    'https://res.cloudinary.com/dp9vvlndo/image/upload/v1781265027/Snacks_wxordv.png',
-    'Chips, biscuits, and quick bites.',
-  ],
-  [
-    'Bakery',
-    'https://res.cloudinary.com/dp9vvlndo/image/upload/v1781265027/Bakery_xwbrje.png',
-    'Fresh bread, pastries, and baked goods.',
-  ],
-  [
-    'Baby Care',
-    'https://res.cloudinary.com/dp9vvlndo/image/upload/v1781265026/Baby_Care_bxxwu0.png',
-    'Essentials for infants and toddlers.',
-  ],
-  [
-    'Frozen Foods',
-    'https://res.cloudinary.com/dp9vvlndo/image/upload/v1781265027/Frozen_Foods_wknnin.png',
-    'Frozen meals and freezer staples.',
-  ],
-  [
-    'Fruits & Vegetables',
-    'https://res.cloudinary.com/dp9vvlndo/image/upload/v1781265026/Fruits_Vegetables_lnmslm.png',
-    'Fresh produce for everyday cooking.',
-  ],
-  [
-    'Meat & Seafood',
-    'https://res.cloudinary.com/dp9vvlndo/image/upload/v1781265026/Meat_Seafood_nhtxen.png',
-    'Fresh meat, fish, and seafood options.',
-  ],
-  [
-    'Pantry Staples',
-    'https://res.cloudinary.com/dp9vvlndo/image/upload/v1781265027/Pantry_Staples_ppwolo.png',
-    'Rice, flour, oil, and pantry basics.',
-  ],
-  [
-    'Personal Care',
-    'https://res.cloudinary.com/dp9vvlndo/image/upload/v1781265026/Personal_Care_osossq.png',
-    'Daily hygiene and personal grooming items.',
-  ],
+  ['Technology', 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=800&q=80', 'Computers, mobile devices, accessories, and everyday technology.'],
+  ['Clothing & Fashion', 'https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=800&q=80', 'Comfortable everyday clothing, activewear, and casual fashion.'],
+  ['Fruits & Vegetables', 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&w=800&q=80', 'Fresh fruits and vegetables for healthy meals, snacks, and smoothies.'],
+  ['Food & Beverages', 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=800&q=80', 'Everyday snacks, drinks, and convenient food for work and home.'],
+  ['Personal Care', 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=800&q=80', 'Daily personal hygiene, skincare, and grooming essentials.'],
 ] as const;
 
 const seedCategories = async () => {
