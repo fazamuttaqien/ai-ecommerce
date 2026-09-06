@@ -1,10 +1,14 @@
 import 'dotenv/config';
+import bcrypt from 'bcryptjs';
 import slugify from 'slugify';
 import { eq, inArray } from 'drizzle-orm';
 import { db } from '../db';
 import { categories, products, users } from '../db/schema';
 
 type ProductSeed = readonly [string, string, string, string, number, number, number, string];
+
+const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL ?? 'admin@example.com';
+const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD;
 
 const productsData: readonly ProductSeed[] = [
   ['Developer Pro Laptop 14', 'Technology', 'NovaTech', 'A lightweight laptop for programmers, students, and professionals. It combines a responsive multi-core processor, 16 GB memory, fast SSD storage, comfortable keyboard, and sharp display for coding, documentation, video calls, web browsing, and everyday multitasking.', 899.99, 10, 18, 'pc'],
@@ -42,9 +46,15 @@ const productsData: readonly ProductSeed[] = [
 
 const seedProducts = async () => {
   try {
-    const admin = await db.select({ id: users._id }).from(users).where(eq(users.role, 'admin')).limit(1);
-    const adminId = admin[0]?.id;
-    if (!adminId) throw new Error('No admin user found. Create an admin user before running the product seed.');
+    const existingAdmin = await db.select({ id: users._id }).from(users).where(eq(users.email, ADMIN_EMAIL)).limit(1);
+    let adminId = existingAdmin[0]?.id;
+
+    if (!adminId) {
+      if (!ADMIN_PASSWORD) throw new Error('SEED_ADMIN_PASSWORD is required when no admin user exists.');
+      const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, 12);
+      const [admin] = await db.insert(users).values({ name: 'Admin', email: ADMIN_EMAIL, password: hashedPassword, role: 'admin' }).returning({ id: users._id });
+      adminId = admin.id;
+    }
 
     const categoryNames = [...new Set(productsData.map((product) => product[1]))];
     const categoryRows = await db.select({ id: categories._id, name: categories.name }).from(categories).where(inArray(categories.name, categoryNames));
