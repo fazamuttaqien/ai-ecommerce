@@ -1,4 +1,7 @@
-import { getProductsService } from './product.service';
+import {
+  keywordProductSearchService,
+  type KeywordProductSearchResultItem,
+} from './keyword-product-search.service';
 import {
   semanticSearchService,
   type SemanticSearchResultItem,
@@ -14,13 +17,6 @@ export type HybridSearchInput = {
   limit?: number;
 };
 
-type KeywordSearchResultItem = Awaited<ReturnType<typeof getProductsService>>['products'][number];
-type KeywordSearchResult = KeywordSearchResultItem & {
-  description: string | null;
-  category: { id: string; name: string; slug: string } | null;
-};
-type SemanticSearchResult = SemanticSearchResultItem;
-
 type HybridProduct = {
   id: string;
   name: string;
@@ -31,13 +27,13 @@ type HybridProduct = {
   originalPrice: number;
   salePrice: number;
   discountPercent: number;
+  discountLabel: string | null;
   unit: string;
   stockCount: number;
   ratingAverage: number;
   reviewCount: number;
   category: { id: string; name: string; slug?: string } | null;
   similarity: number;
-  discountLabel?: string | null;
 };
 
 export type HybridSearchResultItem = HybridProduct & {
@@ -46,26 +42,8 @@ export type HybridSearchResultItem = HybridProduct & {
   hybridScore: number;
 };
 
-const normalizeRankScore = (index: number, total: number): number =>
-  total <= 1 ? 1 : 1 - index / (total - 1);
-
-const normalizeKeywordResult = (product: KeywordSearchResultItem): KeywordSearchResult => ({
-  ...product,
-  id: product._id,
-  description: null,
-  category: product.category
-    ? {
-        id: product.category._id,
-        name: product.category.name,
-        slug: product.category.slug,
-      }
-    : null,
-});
-
-const normalizeSemanticResult = (product: SemanticSearchResult): SemanticSearchResult => product;
-
 const toHybridProduct = (
-  product: KeywordSearchResult | SemanticSearchResult,
+  product: KeywordProductSearchResultItem | SemanticSearchResultItem,
 ): HybridProduct => ({
   id: product.id,
   name: product.name,
@@ -76,13 +54,24 @@ const toHybridProduct = (
   originalPrice: product.originalPrice,
   salePrice: product.salePrice,
   discountPercent: product.discountPercent,
+  discountLabel: 'discountLabel' in product ? product.discountLabel : null,
   unit: product.unit,
   stockCount: product.stockCount,
   ratingAverage: product.ratingAverage,
   reviewCount: product.reviewCount,
   category: product.category,
   similarity: product.similarity,
-  ...('discountLabel' in product ? { discountLabel: product.discountLabel } : {}),
+});
+
+const mergeHybridProduct = (
+  existing: HybridProduct,
+  incoming: HybridProduct,
+): HybridProduct => ({
+  ...existing,
+  ...incoming,
+  description: incoming.description ?? existing.description,
+  discountLabel: incoming.discountLabel ?? existing.discountLabel,
+  category: incoming.category ?? existing.category,
 });
 
 export class HybridSearchService {
@@ -100,14 +89,14 @@ export class HybridSearchService {
     const limit = Math.min(Math.max(input.limit ?? 10, 1), 20);
     const candidateLimit = Math.max(limit, hybridSearchConfig.candidateLimit);
 
-    const [keywordResult, semanticResult] = await Promise.all([
-      getProductsService({
-        keyword: query,
+    const [keywordItems, semanticResult] = await Promise.all([
+      keywordProductSearchService.search({
+        query,
         categoryId: input.categoryId,
+        brand: input.brand,
         minPrice: input.minPrice,
         maxPrice: input.maxPrice,
-        page: 1,
-        limit: candidateLimit,
+        candidateLimit,
       }),
       semanticSearchService.search({
         query,
@@ -121,41 +110,44 @@ export class HybridSearchService {
     ]);
 
     const merged = new Map<string, HybridSearchResultItem>();
-    const keywordItems = keywordResult.products.map(normalizeKeywordResult);
-    const semanticItems = semanticResult.items.map(normalizeSemanticResult);
 
-    keywordItems.forEach((product, index) => {
-      const keywordScore = normalizeRankScore(index, keywordItems.length);
+    for (const product of keywordItems) {
       const hybridProduct = toHybridProduct(product);
+      const keywordScore = product.keywordScore;
+
       merged.set(product.id, {
         ...hybridProduct,
         keywordScore,
         semanticScore: 0,
         hybridScore: keywordScore * hybridSearchConfig.keywordWeight,
       });
-    });
+    }
 
-    semanticItems.forEach((product) => {
+    for (const product of semanticResult.items) {
       const existing = merged.get(product.id);
       const keywordScore = existing?.keywordScore ?? 0;
       const semanticScore = product.similarity;
       const hybridProduct = toHybridProduct(product);
+      const mergedProduct = existing
+        ? mergeHybridProduct(existing, hybridProduct)
+        : hybridProduct;
 
       merged.set(product.id, {
-        ...(existing ?? {}),
-        ...hybridProduct,
+        ...mergedProduct,
         keywordScore,
         semanticScore,
         hybridScore:
           keywordScore * hybridSearchConfig.keywordWeight +
           semanticScore * hybridSearchConfig.semanticWeight,
       });
-    });
+    }
 
     return [...merged.values()]
       .sort(
         (a, b) =>
           b.hybridScore - a.hybridScore ||
+          b.semanticScore - a.semanticScore ||
+          b.keywordScore - a.keywordScore ||
           a.name.localeCompare(b.name) ||
           a.id.localeCompare(b.id),
       )
