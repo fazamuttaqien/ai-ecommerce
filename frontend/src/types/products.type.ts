@@ -1,6 +1,7 @@
 export type ProductType = {
   _id: string
   name: string
+  brand: string
   images: string[]
   originalPrice: number
   discountPercent: number
