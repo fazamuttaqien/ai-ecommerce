@@ -48,58 +48,181 @@ export type RecommendationRepositoryResponse = {
 };
 
 export class RecommendationRepository {
-  async getUserRecommendationData(userId: string, candidateLimit: number, preferenceSeedLimit: number): Promise<RecommendationRepositoryResponse> {
+  async getUserRecommendationData(
+    userId: string,
+    candidateLimit: number,
+    preferenceSeedLimit: number,
+  ): Promise<RecommendationRepositoryResponse> {
     const [purchases, interactions, cart, userReviews] = await Promise.all([
-      db.select({ productId: orderItems.productId, quantity: orderItems.quantity }).from(orderItems).innerJoin(orders, eq(orderItems.orderId, orders._id)).where(and(eq(orders.userId, userId), ne(orders.status, 'cancelled'))),
-      db.select({ productId: productInteractions.productId, type: productInteractions.type }).from(productInteractions).where(eq(productInteractions.userId, userId)).orderBy(desc(productInteractions.createdAt)),
-      db.select({ productId: cartItems.productId, quantity: cartItems.quantity }).from(cartItems).innerJoin(carts, eq(cartItems.cartId, carts._id)).where(eq(carts.userId, userId)),
-      db.select({ productId: reviews.productId, rating: reviews.rating }).from(reviews).where(eq(reviews.userId, userId)),
+      db
+        .select({
+          productId: orderItems.productId,
+          quantity: orderItems.quantity,
+        })
+        .from(orderItems)
+        .innerJoin(orders, eq(orderItems.orderId, orders._id))
+        .where(and(eq(orders.userId, userId), ne(orders.status, 'cancelled'))),
+      db
+        .select({
+          productId: productInteractions.productId,
+          type: productInteractions.type,
+        })
+        .from(productInteractions)
+        .where(eq(productInteractions.userId, userId))
+        .orderBy(desc(productInteractions.createdAt)),
+      db
+        .select({
+          productId: cartItems.productId,
+          quantity: cartItems.quantity,
+        })
+        .from(cartItems)
+        .innerJoin(carts, eq(cartItems.cartId, carts._id))
+        .where(eq(carts.userId, userId)),
+      db
+        .select({ productId: reviews.productId, rating: reviews.rating })
+        .from(reviews)
+        .where(eq(reviews.userId, userId)),
     ]);
 
-    const aggregate = (rows: Array<{ productId: string; weight: number }>): RecommendationSignal[] => {
+    const aggregate = (
+      rows: Array<{ productId: string; weight: number }>,
+    ): RecommendationSignal[] => {
       const map = new Map<string, number>();
-      for (const row of rows) map.set(row.productId, (map.get(row.productId) ?? 0) + row.weight);
-      return [...map.entries()].map(([productId, weight]) => ({ productId, weight }));
+      for (const row of rows)
+        map.set(row.productId, (map.get(row.productId) ?? 0) + row.weight);
+      return [...map.entries()].map(([productId, weight]) => ({
+        productId,
+        weight,
+      }));
     };
 
-    const purchaseSignals = aggregate(purchases.map((row) => ({ productId: row.productId, weight: Math.max(1, row.quantity) })));
-    const interactionSignals = aggregate(interactions.map((row) => ({ productId: row.productId, weight: row.type === 'homepage_click' ? recommendationConfig.interactionWeights.homepage_click : recommendationConfig.interactionWeights.view })));
-    const cartSignals = aggregate(cart.map((row) => ({ productId: row.productId, weight: Math.max(1, row.quantity) })));
-    const reviewSignals = aggregate(userReviews.filter((row) => row.rating >= 4).map((row) => ({ productId: row.productId, weight: row.rating / 5 })));
+    const purchaseSignals = aggregate(
+      purchases.map((row) => ({
+        productId: row.productId,
+        weight: Math.max(1, row.quantity),
+      })),
+    );
+    const interactionSignals = aggregate(
+      interactions.map((row) => ({
+        productId: row.productId,
+        weight:
+          row.type === 'homepage_click'
+            ? recommendationConfig.interactionWeights.homepage_click
+            : recommendationConfig.interactionWeights.view,
+      })),
+    );
+    const cartSignals = aggregate(
+      cart.map((row) => ({
+        productId: row.productId,
+        weight: Math.max(1, row.quantity),
+      })),
+    );
+    const reviewSignals = aggregate(
+      userReviews
+        .filter((row) => row.rating >= 4)
+        .map((row) => ({ productId: row.productId, weight: row.rating / 5 })),
+    );
 
     const seedWeights = new Map<string, number>();
-    const addSeedWeights = (signals: RecommendationSignal[], multiplier: number) => {
-      for (const signal of signals) seedWeights.set(signal.productId, (seedWeights.get(signal.productId) ?? 0) + signal.weight * multiplier);
+    const addSeedWeights = (
+      signals: RecommendationSignal[],
+      multiplier: number,
+    ) => {
+      for (const signal of signals)
+        seedWeights.set(
+          signal.productId,
+          (seedWeights.get(signal.productId) ?? 0) + signal.weight * multiplier,
+        );
     };
     addSeedWeights(purchaseSignals, recommendationConfig.weights.purchase);
-    addSeedWeights(interactionSignals, recommendationConfig.weights.interaction);
+    addSeedWeights(
+      interactionSignals,
+      recommendationConfig.weights.interaction,
+    );
     addSeedWeights(cartSignals, recommendationConfig.weights.cart);
     addSeedWeights(reviewSignals, recommendationConfig.weights.review);
     const seedIds = [...seedWeights.entries()]
-      .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
+      .sort(
+        (left, right) => right[1] - left[1] || left[0].localeCompare(right[0]),
+      )
       .slice(0, preferenceSeedLimit)
       .map(([productId]) => productId);
 
     const [preferenceProducts, candidates] = await Promise.all([
       seedIds.length
-        ? db.select({
-            id: products._id, name: products.name, brand: products.brand, slug: products.slug,
-            description: products.description, images: products.images, originalPrice: products.originalPrice,
-            salePrice: products.salePrice, discountPercent: products.discountPercent, unit: products.unit,
-            stockCount: products.stockCount, ratingAverage: products.ratingAverage, reviewCount: products.reviewCount,
-            category: { id: categories._id, name: categories.name }, embedding: productEmbeddings.embedding,
-          }).from(products).leftJoin(categories, eq(products.categoryId, categories._id)).leftJoin(productEmbeddings, and(eq(productEmbeddings.productId, products._id), eq(productEmbeddings.model, embeddingConfig.model))).where(inArray(products._id, seedIds))
+        ? db
+            .select({
+              id: products._id,
+              name: products.name,
+              brand: products.brand,
+              slug: products.slug,
+              description: products.description,
+              images: products.images,
+              originalPrice: products.originalPrice,
+              salePrice: products.salePrice,
+              discountPercent: products.discountPercent,
+              unit: products.unit,
+              stockCount: products.stockCount,
+              ratingAverage: products.ratingAverage,
+              reviewCount: products.reviewCount,
+              category: { id: categories._id, name: categories.name },
+              embedding: productEmbeddings.embedding,
+            })
+            .from(products)
+            .leftJoin(categories, eq(products.categoryId, categories._id))
+            .leftJoin(
+              productEmbeddings,
+              and(
+                eq(productEmbeddings.productId, products._id),
+                eq(productEmbeddings.model, embeddingConfig.model),
+              ),
+            )
+            .where(inArray(products._id, seedIds))
         : Promise.resolve([]),
-      db.select({
-        id: products._id, name: products.name, brand: products.brand, slug: products.slug,
-        description: products.description, images: products.images, originalPrice: products.originalPrice,
-        salePrice: products.salePrice, discountPercent: products.discountPercent, unit: products.unit,
-        stockCount: products.stockCount, ratingAverage: products.ratingAverage, reviewCount: products.reviewCount,
-        category: { id: categories._id, name: categories.name }, embedding: productEmbeddings.embedding,
-      }).from(products).leftJoin(categories, eq(products.categoryId, categories._id)).leftJoin(productEmbeddings, and(eq(productEmbeddings.productId, products._id), eq(productEmbeddings.model, embeddingConfig.model))).where(and(eq(products.isActive, true), gt(products.stockCount, 0))).orderBy(desc(products.reviewCount), desc(products.ratingAverage), desc(products._id)).limit(candidateLimit),
+      db
+        .select({
+          id: products._id,
+          name: products.name,
+          brand: products.brand,
+          slug: products.slug,
+          description: products.description,
+          images: products.images,
+          originalPrice: products.originalPrice,
+          salePrice: products.salePrice,
+          discountPercent: products.discountPercent,
+          unit: products.unit,
+          stockCount: products.stockCount,
+          ratingAverage: products.ratingAverage,
+          reviewCount: products.reviewCount,
+          category: { id: categories._id, name: categories.name },
+          embedding: productEmbeddings.embedding,
+        })
+        .from(products)
+        .leftJoin(categories, eq(products.categoryId, categories._id))
+        .leftJoin(
+          productEmbeddings,
+          and(
+            eq(productEmbeddings.productId, products._id),
+            eq(productEmbeddings.model, embeddingConfig.model),
+          ),
+        )
+        .where(and(eq(products.isActive, true), gt(products.stockCount, 0)))
+        .orderBy(
+          desc(products.reviewCount),
+          desc(products.ratingAverage),
+          desc(products._id),
+        )
+        .limit(candidateLimit),
     ]);
 
-    return { purchases: purchaseSignals, interactions: interactionSignals, cart: cartSignals, reviews: reviewSignals, preferenceProducts: preferenceProducts as RecommendationProduct[], candidates: candidates as RecommendationProduct[] };
+    return {
+      purchases: purchaseSignals,
+      interactions: interactionSignals,
+      cart: cartSignals,
+      reviews: reviewSignals,
+      preferenceProducts: preferenceProducts as RecommendationProduct[],
+      candidates: candidates as RecommendationProduct[],
+    };
   }
 }
 

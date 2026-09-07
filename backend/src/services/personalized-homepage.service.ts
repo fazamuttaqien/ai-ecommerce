@@ -1,7 +1,4 @@
-import {
-  getDealsService,
-  getProductsService,
-} from './product.service';
+import { getDealsService, getProductsService } from './product.service';
 import { recommendationService } from './recommendation.service';
 import type { RecommendationResultItem } from './recommendation.service';
 
@@ -52,7 +49,9 @@ const mapRecommendationProduct = (
   reviewCount: product.reviewCount,
 });
 
-const mapProductListItem = (product: Awaited<ReturnType<typeof getProductsService>>['products'][number]): HomepageProduct => ({
+const mapProductListItem = (
+  product: Awaited<ReturnType<typeof getProductsService>>['products'][number],
+): HomepageProduct => ({
   _id: product._id,
   name: product.name,
   brand: product.brand,
@@ -68,7 +67,9 @@ const mapProductListItem = (product: Awaited<ReturnType<typeof getProductsServic
   reviewCount: product.reviewCount,
 });
 
-const mapDealItem = (product: Awaited<ReturnType<typeof getDealsService>>['products'][number]): HomepageProduct => ({
+const mapDealItem = (
+  product: Awaited<ReturnType<typeof getDealsService>>['products'][number],
+): HomepageProduct => ({
   _id: product._id,
   name: product.name,
   brand: product.brand,
@@ -85,18 +86,19 @@ export class PersonalizedHomepageService {
   async getPersonalizedHomepage(
     userId: string,
   ): Promise<PersonalizedHomepageResponse> {
-    const [recommendationResult, popularResult, dealsResult] = await Promise.all([
-      recommendationService
-        .getRecommendations(userId, RECOMMENDATION_LIMIT)
-        .catch(() => null),
-      getProductsService({
-        page: 1,
-        limit: DEFAULT_SECTION_LIMIT,
-        sort: 'highest-rating',
-        inStock: true,
-      }),
-      getDealsService({ limit: DEFAULT_SECTION_LIMIT }),
-    ]);
+    const [recommendationResult, popularResult, dealsResult] =
+      await Promise.all([
+        recommendationService
+          .getRecommendations(userId, RECOMMENDATION_LIMIT)
+          .catch(() => null),
+        getProductsService({
+          page: 1,
+          limit: DEFAULT_SECTION_LIMIT,
+          sort: 'highest-rating',
+          inStock: true,
+        }),
+        getDealsService({ limit: DEFAULT_SECTION_LIMIT }),
+      ]);
 
     const recommendedProducts =
       recommendationResult?.items.map(mapRecommendationProduct) ?? [];
@@ -109,17 +111,17 @@ export class PersonalizedHomepageService {
         {
           type: 'for-you',
           title: 'Recommended for You',
-          products: (
-            personalized ? recommendedProducts : fallbackProducts
+          products: (personalized
+            ? recommendedProducts
+            : fallbackProducts
           ).slice(0, DEFAULT_SECTION_LIMIT),
         },
         {
           type: 'based-on-history',
           title: 'Based on Your Activity',
-          products: (
-            personalized
-              ? recommendedProducts.slice(DEFAULT_SECTION_LIMIT)
-              : fallbackProducts
+          products: (personalized
+            ? recommendedProducts.slice(DEFAULT_SECTION_LIMIT)
+            : fallbackProducts
           ).slice(0, DEFAULT_SECTION_LIMIT),
         },
         {
@@ -138,5 +140,4 @@ export class PersonalizedHomepageService {
   }
 }
 
-export const personalizedHomepageService =
-  new PersonalizedHomepageService();
+export const personalizedHomepageService = new PersonalizedHomepageService();

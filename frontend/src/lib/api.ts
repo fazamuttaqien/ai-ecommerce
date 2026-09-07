@@ -54,8 +54,9 @@ export const getProductDealsQueryFn = async (
   (await API.get<DealsResponseType>('/products/deals', { params: { limit } }))
     .data
 
-export const getPersonalizedHomepageQueryFn = async (): Promise<PersonalizedHomepageResponse> =>
-  (await API.get<PersonalizedHomepageResponse>('/homepage/personalized')).data
+export const getPersonalizedHomepageQueryFn =
+  async (): Promise<PersonalizedHomepageResponse> =>
+    (await API.get<PersonalizedHomepageResponse>('/homepage/personalized')).data
 
 export const getProductsQueryFn = async (
   params?: ProductParams,

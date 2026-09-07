@@ -9,7 +9,10 @@ export const getRecommendationsController = asyncHandler(
   async (req: Request, res: Response) => {
     const input = recommendationSchema.parse(req.query);
     const userId = req.user!._id.toString();
-    const result = await recommendationService.getRecommendations(userId, input.limit);
+    const result = await recommendationService.getRecommendations(
+      userId,
+      input.limit,
+    );
 
     res.status(HTTPSTATUS.OK).json({
       message: 'Recommendations generated successfully',

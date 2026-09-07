@@ -35,8 +35,8 @@ const HeroCarousel = ({ userName, personalized = false }: Props) => {
       subtitle: 'New customers',
       title: (
         <>
-          <span className="mark-label">$0 delivery fees</span> <br /> on above $20
-          orders
+          <span className="mark-label">$0 delivery fees</span> <br /> on above
+          $20 orders
         </>
       ),
       action: 'Shop now',
@@ -45,7 +45,8 @@ const HeroCarousel = ({ userName, personalized = false }: Props) => {
     {
       id: 'carousel-1',
       subtitle: 'Fresh savings',
-      title: 'Everyday essentials and great value, delivered when you need them',
+      title:
+        'Everyday essentials and great value, delivered when you need them',
       action: 'Shop deals',
       image: carouselImageOne,
     },
@@ -53,15 +54,19 @@ const HeroCarousel = ({ userName, personalized = false }: Props) => {
 
   return (
     <section className="w-full py-5">
-      <Carousel
-        opts={{ align: 'start', loop: true }}
-        className="w-full"
-      >
+      <Carousel opts={{ align: 'start', loop: true }} className="w-full">
         <CarouselContent className="-ml-4">
           {heroSlides.map((slide) => (
-            <CarouselItem key={slide.id} className="basis-full pl-4 lg:basis-1/2">
+            <CarouselItem
+              key={slide.id}
+              className="basis-full pl-4 lg:basis-1/2"
+            >
               <article className="relative h-62.5 overflow-hidden rounded-2xl border border-border bg-card shadow-xs md:h-65">
-                <img src={slide.image} alt="" className="absolute inset-0 size-full object-cover" />
+                <img
+                  src={slide.image}
+                  alt=""
+                  className="absolute inset-0 size-full object-cover"
+                />
                 <div className="absolute inset-0 bg-white/45" />
                 <div className="relative z-10 flex h-full max-w-[90%] flex-col justify-center gap-5 p-7 sm:max-w-[58%] md:p-9">
                   <p className="text-sm font-bold uppercase tracking-wide text-primary">
@@ -70,7 +75,11 @@ const HeroCarousel = ({ userName, personalized = false }: Props) => {
                   <h1 className="text-2xl font-bold leading-tight text-black md:text-3xl">
                     {slide.title}
                   </h1>
-                  <Button asChild variant="secondary" className="h-10 w-fit rounded-sm px-7 text-base">
+                  <Button
+                    asChild
+                    variant="secondary"
+                    className="h-10 w-fit rounded-sm px-7 text-base"
+                  >
                     <Link to={PUBLIC_ROUTES.PRODUCTS}>{slide.action}</Link>
                   </Button>
                 </div>

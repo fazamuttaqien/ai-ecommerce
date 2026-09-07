@@ -1,13 +1,7 @@
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 
-const Logo = ({
-  className,
-  to = '/',
-}: {
-  className?: string
-  to?: string
-}) => {
+const Logo = ({ className, to = '/' }: { className?: string; to?: string }) => {
   return (
     <Link
       to={to}

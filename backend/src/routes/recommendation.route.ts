@@ -5,6 +5,10 @@ import { passportAuthenticateJwt } from '../config/passport.config';
 
 const recommendationRoute: Router = Router();
 
-recommendationRoute.get('/', passportAuthenticateJwt, getRecommendationsController);
+recommendationRoute.get(
+  '/',
+  passportAuthenticateJwt,
+  getRecommendationsController,
+);
 
 export default recommendationRoute;

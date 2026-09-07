@@ -10,25 +10,38 @@ export const relations = defineRelations(schema, (r) => ({
     reviews: r.many.reviews(),
     productInteractions: r.many.productInteractions(),
   },
-  addresses: { user: r.one.users({ from: r.addresses.userId, to: r.users._id }) },
+  addresses: {
+    user: r.one.users({ from: r.addresses.userId, to: r.users._id }),
+  },
   categories: { products: r.many.products() },
   products: {
     user: r.one.users({ from: r.products.userId, to: r.users._id }),
-    category: r.one.categories({ from: r.products.categoryId, to: r.categories._id }),
+    category: r.one.categories({
+      from: r.products.categoryId,
+      to: r.categories._id,
+    }),
     embeddings: r.many.productEmbeddings(),
     cartItems: r.many.cartItems(),
     orderItems: r.many.orderItems(),
     reviews: r.many.reviews(),
     interactions: r.many.productInteractions(),
   },
-  productEmbeddings: { product: r.one.products({ from: r.productEmbeddings.productId, to: r.products._id }) },
+  productEmbeddings: {
+    product: r.one.products({
+      from: r.productEmbeddings.productId,
+      to: r.products._id,
+    }),
+  },
   carts: {
     user: r.one.users({ from: r.carts.userId, to: r.users._id }),
     items: r.many.cartItems(),
   },
   cartItems: {
     cart: r.one.carts({ from: r.cartItems.cartId, to: r.carts._id }),
-    product: r.one.products({ from: r.cartItems.productId, to: r.products._id }),
+    product: r.one.products({
+      from: r.cartItems.productId,
+      to: r.products._id,
+    }),
   },
   orders: {
     user: r.one.users({ from: r.orders.userId, to: r.users._id }),
@@ -37,17 +50,26 @@ export const relations = defineRelations(schema, (r) => ({
   },
   orderItems: {
     order: r.one.orders({ from: r.orderItems.orderId, to: r.orders._id }),
-    product: r.one.products({ from: r.orderItems.productId, to: r.products._id }),
+    product: r.one.products({
+      from: r.orderItems.productId,
+      to: r.products._id,
+    }),
     review: r.one.reviews(),
   },
   reviews: {
     user: r.one.users({ from: r.reviews.userId, to: r.users._id }),
     order: r.one.orders({ from: r.reviews.orderId, to: r.orders._id }),
-    orderItem: r.one.orderItems({ from: r.reviews.orderItemId, to: r.orderItems._id }),
+    orderItem: r.one.orderItems({
+      from: r.reviews.orderItemId,
+      to: r.orderItems._id,
+    }),
     product: r.one.products({ from: r.reviews.productId, to: r.products._id }),
   },
   productInteractions: {
     user: r.one.users({ from: r.productInteractions.userId, to: r.users._id }),
-    product: r.one.products({ from: r.productInteractions.productId, to: r.products._id }),
+    product: r.one.products({
+      from: r.productInteractions.productId,
+      to: r.products._id,
+    }),
   },
 }));

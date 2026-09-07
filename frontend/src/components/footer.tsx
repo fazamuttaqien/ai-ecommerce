@@ -8,7 +8,7 @@ const Footer = () => {
     <footer className="mt-8 border-border bg-background">
       <section className="rounded-t-xs px-4 py-14 text-center">
         <div className="mx-auto flex max-w-2xl flex-col items-center gap-4">
-          <Logo showText={false} className="[&_div]:size-10" />
+          <Logo className="[&_div]:size-10" />
           <div className="flex flex-col gap-1">
             <h2 className="text-2xl font-semibold text-foreground">
               There&apos;s more to explore
@@ -17,10 +17,7 @@ const Footer = () => {
               Shop fresh groceries, pantry staples, and everyday essentials.
             </p>
           </div>
-          <Button
-            asChild
-            className="mt-3 h-11 rounded-sm px-8 text-base"
-          >
+          <Button asChild className="mt-3 h-11 rounded-sm px-8 text-base">
             <Link to={PUBLIC_ROUTES.PRODUCTS}>View all products</Link>
           </Button>
         </div>

@@ -2,7 +2,11 @@ import { useQuery } from '@tanstack/react-query'
 import HeroCarousel from './hero-carousel'
 import CategoriesSection from './categories-section'
 import PersonalizedSections from './personalized-sections'
-import { getPersonalizedHomepageQueryFn, getProductsQueryFn, getProductDealsQueryFn } from '@/lib/api'
+import {
+  getPersonalizedHomepageQueryFn,
+  getProductsQueryFn,
+  getProductDealsQueryFn,
+} from '@/lib/api'
 import { useUser } from '@/hooks/use-user'
 import type { PersonalizedHomepageSection } from '@/types/personalized-homepage.type'
 
@@ -24,7 +28,13 @@ const HomePage = () => {
 
   const fallbackProductsQuery = useQuery({
     queryKey: ['homepage-fallback-products'],
-    queryFn: () => getProductsQueryFn({ page: 1, limit: FALLBACK_LIMIT, sort: 'highest-rating', inStock: true }),
+    queryFn: () =>
+      getProductsQueryFn({
+        page: 1,
+        limit: FALLBACK_LIMIT,
+        sort: 'highest-rating',
+        inStock: true,
+      }),
     enabled: !isUserLoading && shouldUseFallback,
     staleTime: 1000 * 60 * 5,
   })
@@ -40,7 +50,11 @@ const HomePage = () => {
   const fallbackDeals = fallbackDealsQuery.data?.products ?? []
   const fallbackSections: PersonalizedHomepageSection[] = [
     { type: 'for-you', title: 'Popular Picks', products: fallbackProducts },
-    { type: 'based-on-history', title: 'Discover More', products: fallbackProducts },
+    {
+      type: 'based-on-history',
+      title: 'Discover More',
+      products: fallbackProducts,
+    },
     { type: 'deals', title: 'Deals for You', products: fallbackDeals },
     { type: 'popular', title: 'Popular Products', products: fallbackProducts },
   ]
@@ -48,12 +62,14 @@ const HomePage = () => {
   const isLoading =
     isUserLoading ||
     (isAuthenticated && personalizedQuery.isLoading) ||
-    (shouldUseFallback && (fallbackProductsQuery.isLoading || fallbackDealsQuery.isLoading))
+    (shouldUseFallback &&
+      (fallbackProductsQuery.isLoading || fallbackDealsQuery.isLoading))
 
   const sections = shouldUseFallback
     ? fallbackSections
-    : personalizedQuery.data?.sections ?? []
-  const personalized = !shouldUseFallback && (personalizedQuery.data?.personalized ?? false)
+    : (personalizedQuery.data?.sections ?? [])
+  const personalized =
+    !shouldUseFallback && (personalizedQuery.data?.personalized ?? false)
 
   return (
     <div className="w-full">

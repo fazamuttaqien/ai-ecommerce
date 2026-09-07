@@ -8,7 +8,12 @@ import { ChevronRight, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { PUBLIC_ROUTES } from '@/routes/route'
 
-const sectionOrder: PersonalizedHomepageSectionType[] = ['for-you', 'based-on-history', 'deals', 'popular']
+const sectionOrder: PersonalizedHomepageSectionType[] = [
+  'for-you',
+  'based-on-history',
+  'deals',
+  'popular',
+]
 
 const titleMap: Record<PersonalizedHomepageSectionType, string> = {
   'for-you': 'Recommended for You',
@@ -19,7 +24,8 @@ const titleMap: Record<PersonalizedHomepageSectionType, string> = {
 
 const descriptionMap: Record<PersonalizedHomepageSectionType, string> = {
   'for-you': 'A selection ranked around what you are most likely to love.',
-  'based-on-history': 'Products inspired by your recent activity and preferences.',
+  'based-on-history':
+    'Products inspired by your recent activity and preferences.',
   deals: 'Fresh savings worth adding to your next basket.',
   popular: 'Great picks when you want to discover something new.',
 }
@@ -36,13 +42,20 @@ const ProductSkeleton = () => (
 )
 
 const SectionSkeleton = ({ featured = false }: { featured?: boolean }) => (
-  <section className={featured ? 'rounded-2xl border bg-muted/30 p-4 md:p-6' : ''}>
+  <section
+    className={featured ? 'rounded-2xl border bg-muted/30 p-4 md:p-6' : ''}
+  >
     <div className="mb-5 flex items-end justify-between gap-4">
-      <div className="space-y-2"><Skeleton className="h-7 w-52" /><Skeleton className="h-4 w-72 max-w-full" /></div>
+      <div className="space-y-2">
+        <Skeleton className="h-7 w-52" />
+        <Skeleton className="h-4 w-72 max-w-full" />
+      </div>
       <Skeleton className="h-5 w-20" />
     </div>
     <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-6">
-      {Array.from({ length: 6 }).map((_, index) => <ProductSkeleton key={index} />)}
+      {Array.from({ length: 6 }).map((_, index) => (
+        <ProductSkeleton key={index} />
+      ))}
     </div>
   </section>
 )
@@ -71,11 +84,20 @@ const renderProducts = (products: PersonalizedHomepageSection['products']) => (
 )
 
 const PersonalizedSections = ({ sections, loading = false }: Props) => {
-  if (loading) return <div className="flex flex-col gap-10 py-8"><SectionSkeleton featured /><SectionSkeleton /><SectionSkeleton /></div>
+  if (loading)
+    return (
+      <div className="flex flex-col gap-10 py-8">
+        <SectionSkeleton featured />
+        <SectionSkeleton />
+        <SectionSkeleton />
+      </div>
+    )
 
   const visibleSections = sectionOrder
     .map((type) => sections.find((section) => section.type === type))
-    .filter((section): section is PersonalizedHomepageSection => Boolean(section?.products.length))
+    .filter((section): section is PersonalizedHomepageSection =>
+      Boolean(section?.products.length),
+    )
 
   if (!visibleSections.length) return null
 
@@ -84,16 +106,36 @@ const PersonalizedSections = ({ sections, loading = false }: Props) => {
       {visibleSections.map((section, index) => {
         const featured = index === 0 && section.type === 'for-you'
         return (
-          <section key={section.type} className={featured ? 'rounded-2xl border bg-muted/30 p-4 md:p-6' : ''}>
+          <section
+            key={section.type}
+            className={
+              featured ? 'rounded-2xl border bg-muted/30 p-4 md:p-6' : ''
+            }
+          >
             <div className="mb-5 flex items-end justify-between gap-4">
               <div>
                 <div className="mb-1 flex items-center gap-2">
-                  {featured ? <Sparkles className="size-4 text-primary" /> : null}
-                  <h2 className={featured ? 'text-2xl font-bold md:text-3xl' : 'text-xl font-semibold md:text-2xl'}>{titleMap[section.type]}</h2>
+                  {featured ? (
+                    <Sparkles className="size-4 text-primary" />
+                  ) : null}
+                  <h2
+                    className={
+                      featured
+                        ? 'text-2xl font-bold md:text-3xl'
+                        : 'text-xl font-semibold md:text-2xl'
+                    }
+                  >
+                    {titleMap[section.type]}
+                  </h2>
                 </div>
-                <p className="text-sm text-muted-foreground">{descriptionMap[section.type]}</p>
+                <p className="text-sm text-muted-foreground">
+                  {descriptionMap[section.type]}
+                </p>
               </div>
-              <Link to={PUBLIC_ROUTES.PRODUCTS} className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-foreground underline-offset-4 hover:underline">
+              <Link
+                to={PUBLIC_ROUTES.PRODUCTS}
+                className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-foreground underline-offset-4 hover:underline"
+              >
                 See more <ChevronRight className="size-4" />
               </Link>
             </div>

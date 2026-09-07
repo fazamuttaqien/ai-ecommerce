@@ -146,7 +146,10 @@ const ProductDetailPage = () => {
 
       <section className="grid gap-8 lg:grid-cols-[3fr_2fr]">
         <div className="flex min-h-95 items-center justify-center">
-          <Carousel className="w-full" opts={{ loop: product.images.length > 1 }}>
+          <Carousel
+            className="w-full"
+            opts={{ loop: product.images.length > 1 }}
+          >
             <CarouselContent>
               {product.images.map((image, index) => (
                 <CarouselItem key={`${image}-${index}`}>
