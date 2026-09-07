@@ -44,6 +44,11 @@ const productsData: readonly ProductSeed[] = [
   ['Soothing Aloe Body Lotion', 'Personal Care', 'PureCare', 'A lightweight body lotion with an aloe-inspired soothing profile for everyday moisturizing after showers or whenever skin feels dry. It is convenient for simple daily grooming routines and can be used on arms, legs, and other areas needing regular moisturization.', 9.49, 8, 38, 'pc'],
 ];
 
+const getProductImages = (name: string): string[] => {
+  const seed = slugify(name, { lower: true, strict: true });
+  return [1, 2, 3, 4].map((index) => `https://picsum.photos/seed/${seed}-${index}/800/800`);
+};
+
 const seedProducts = async () => {
   try {
     const existingAdmin = await db.select({ id: users._id }).from(users).where(eq(users.email, ADMIN_EMAIL)).limit(1);
@@ -66,7 +71,7 @@ const seedProducts = async () => {
     const rows = productsData.map(([name, category, brand, description, originalPrice, discountPercent, stockCount, unit]) => {
       const categoryId = categoryMap.get(category);
       if (!categoryId) throw new Error(`Category not found: ${category}`);
-      return { userId: adminId, categoryId, name, brand, slug: slugify(name, { lower: true, strict: true }), description, images: [], originalPrice, salePrice: originalPrice * (1 - discountPercent / 100), discountPercent, discountLabel: discountPercent > 0 ? `${discountPercent}% OFF` : null, stockCount, unit, isActive: true, ratingAverage: 0, reviewCount: 0 };
+      return { userId: adminId, categoryId, name, brand, slug: slugify(name, { lower: true, strict: true }), description, images: getProductImages(name), originalPrice, salePrice: originalPrice * (1 - discountPercent / 100), discountPercent, discountLabel: discountPercent > 0 ? `${discountPercent}% OFF` : null, stockCount, unit, isActive: true, ratingAverage: 0, reviewCount: 0 };
     });
     const created = await db.insert(products).values(rows).returning({ id: products._id });
     console.log(`${created.length} products seeded successfully`);
