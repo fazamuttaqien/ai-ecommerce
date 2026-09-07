@@ -20,23 +20,19 @@ const HomePage = () => {
     staleTime: 1000 * 60 * 3,
   })
 
+  const shouldUseFallback = !isAuthenticated || personalizedQuery.isError
+
   const fallbackProductsQuery = useQuery({
     queryKey: ['homepage-fallback-products'],
-    queryFn: () =>
-      getProductsQueryFn({
-        page: 1,
-        limit: FALLBACK_LIMIT,
-        sort: 'highest-rating',
-        inStock: true,
-      }),
-    enabled: !isAuthenticated && !isUserLoading,
+    queryFn: () => getProductsQueryFn({ page: 1, limit: FALLBACK_LIMIT, sort: 'highest-rating', inStock: true }),
+    enabled: !isUserLoading && shouldUseFallback,
     staleTime: 1000 * 60 * 5,
   })
 
   const fallbackDealsQuery = useQuery({
     queryKey: ['homepage-fallback-deals'],
     queryFn: () => getProductDealsQueryFn(FALLBACK_LIMIT),
-    enabled: !isAuthenticated && !isUserLoading,
+    enabled: !isUserLoading && shouldUseFallback,
     staleTime: 1000 * 60 * 5,
   })
 
@@ -51,12 +47,13 @@ const HomePage = () => {
 
   const isLoading =
     isUserLoading ||
-    (isAuthenticated ? personalizedQuery.isLoading : fallbackProductsQuery.isLoading || fallbackDealsQuery.isLoading)
+    (isAuthenticated && personalizedQuery.isLoading) ||
+    (shouldUseFallback && (fallbackProductsQuery.isLoading || fallbackDealsQuery.isLoading))
 
-  const sections = isAuthenticated
-    ? personalizedQuery.data?.sections ?? []
-    : fallbackSections
-  const personalized = personalizedQuery.data?.personalized ?? false
+  const sections = shouldUseFallback
+    ? fallbackSections
+    : personalizedQuery.data?.sections ?? []
+  const personalized = !shouldUseFallback && (personalizedQuery.data?.personalized ?? false)
 
   return (
     <div className="w-full">
