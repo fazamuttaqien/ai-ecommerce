@@ -8,15 +8,26 @@ import type { RecommendationResultItem } from './recommendation.service';
 const DEFAULT_SECTION_LIMIT = 6;
 const RECOMMENDATION_LIMIT = 12;
 
-export type PersonalizedHomepageProduct = Omit<
-  RecommendationResultItem,
-  'recommendationScore'
->;
+type HomepageProduct = {
+  _id: string;
+  name: string;
+  brand: string;
+  slug: string;
+  images: string[];
+  unit?: string;
+  originalPrice: number;
+  salePrice: number;
+  discountPercent: number;
+  discountLabel?: string;
+  stockCount?: number;
+  ratingAverage: number;
+  reviewCount: number;
+};
 
 export type PersonalizedHomepageSection = {
   type: 'for-you' | 'based-on-history' | 'popular' | 'deals';
   title: string;
-  products: PersonalizedHomepageProduct[];
+  products: HomepageProduct[];
 };
 
 export type PersonalizedHomepageResponse = {
@@ -24,12 +35,51 @@ export type PersonalizedHomepageResponse = {
   personalized: boolean;
 };
 
-const withoutRecommendationScore = (
+const mapRecommendationProduct = (
   product: RecommendationResultItem,
-): PersonalizedHomepageProduct => {
-  const { recommendationScore: _recommendationScore, ...result } = product;
-  return result;
-};
+): HomepageProduct => ({
+  _id: product.id,
+  name: product.name,
+  brand: product.brand,
+  slug: product.slug,
+  images: product.images,
+  unit: product.unit,
+  originalPrice: product.originalPrice,
+  salePrice: product.salePrice,
+  discountPercent: product.discountPercent,
+  stockCount: product.stockCount,
+  ratingAverage: product.ratingAverage,
+  reviewCount: product.reviewCount,
+});
+
+const mapProductListItem = (product: Awaited<ReturnType<typeof getProductsService>>['products'][number]): HomepageProduct => ({
+  _id: product._id,
+  name: product.name,
+  brand: product.brand,
+  slug: product.slug,
+  images: product.images,
+  unit: product.unit,
+  originalPrice: product.originalPrice,
+  salePrice: product.salePrice,
+  discountPercent: product.discountPercent,
+  discountLabel: product.discountLabel,
+  stockCount: product.stockCount,
+  ratingAverage: product.ratingAverage,
+  reviewCount: product.reviewCount,
+});
+
+const mapDealItem = (product: Awaited<ReturnType<typeof getDealsService>>['products'][number]): HomepageProduct => ({
+  _id: product._id,
+  name: product.name,
+  brand: product.brand,
+  slug: product.slug,
+  images: product.images,
+  originalPrice: product.originalPrice,
+  salePrice: product.salePrice,
+  discountPercent: product.discountPercent,
+  ratingAverage: product.ratingAverage,
+  reviewCount: product.reviewCount,
+});
 
 export class PersonalizedHomepageService {
   async getPersonalizedHomepage(
@@ -49,8 +99,9 @@ export class PersonalizedHomepageService {
     ]);
 
     const recommendedProducts =
-      recommendationResult?.items.map(withoutRecommendationScore) ?? [];
-    const fallbackProducts = popularResult.products;
+      recommendationResult?.items.map(mapRecommendationProduct) ?? [];
+    const fallbackProducts = popularResult.products.map(mapProductListItem);
+    const dealProducts = dealsResult.products.map(mapDealItem);
     const personalized = recommendationResult?.personalized ?? false;
 
     return {
@@ -79,7 +130,7 @@ export class PersonalizedHomepageService {
         {
           type: 'deals',
           title: 'Deals for You',
-          products: dealsResult.products,
+          products: dealProducts,
         },
       ],
       personalized,
