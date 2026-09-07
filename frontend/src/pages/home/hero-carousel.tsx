@@ -12,90 +12,73 @@ import {
 import { PUBLIC_ROUTES } from '@/routes/route'
 import { Link } from 'react-router-dom'
 
-const heroSlides = [
-  {
-    id: 'carousel-2',
-    subtitle: 'New customers',
-    title: (
-      <>
-        <span className="mark-label">$0 delivery fees</span> <br /> on above $20
-        orders
-      </>
-    ),
-    action: 'Shop now',
-    note: 'Min spend $20. No delivery or service fees apply.',
-    image: carouselImageTwo,
-  },
+type Props = {
+  userName?: string
+  personalized?: boolean
+}
 
-  {
-    id: 'carousel-3',
-    subtitle: 'Fresh picks daily',
-    title: 'Build your week around produce that tastes better',
-    action: 'Explore recipes',
-    note: 'Seasonal groceries delivered when you need them.',
-    image: carouselImageThree,
-  },
-  {
-    id: 'carousel-1',
-    subtitle: 'Feeding Everyone x instant',
-    title: 'For 21M kids, summer break means no lunch',
-    action: 'Donate groceries',
-    note: 'Help families get fresh food this season.',
-    image: carouselImageOne,
-  },
-]
+const HeroCarousel = ({ userName, personalized = false }: Props) => {
+  const personalTitle = userName
+    ? `Pilihan yang pas untuk Anda, ${userName}`
+    : 'Temukan Produk yang Cocok untuk Anda'
 
-const HeroCarousel = () => {
+  const heroSlides = [
+    {
+      id: 'personalized',
+      subtitle: personalized ? 'Picked for you' : 'Fresh picks for you',
+      title: personalTitle,
+      action: 'Explore your picks',
+      image: carouselImageThree,
+    },
+    {
+      id: 'carousel-2',
+      subtitle: 'New customers',
+      title: (
+        <>
+          <span className="mark-label">$0 delivery fees</span> <br /> on above $20
+          orders
+        </>
+      ),
+      action: 'Shop now',
+      image: carouselImageTwo,
+    },
+    {
+      id: 'carousel-1',
+      subtitle: 'Fresh savings',
+      title: 'Everyday essentials and great value, delivered when you need them',
+      action: 'Shop deals',
+      image: carouselImageOne,
+    },
+  ]
+
   return (
     <section className="w-full py-5">
       <Carousel
-        opts={{
-          align: 'start',
-          loop: true,
-        }}
+        opts={{ align: 'start', loop: true }}
         className="w-full"
       >
         <CarouselContent className="-ml-4">
           {heroSlides.map((slide) => (
-            <CarouselItem
-              key={slide.id}
-              className="basis-full pl-4 lg:basis-1/2"
-            >
-              <article className="relative h-62.5 overflow-hidden shadow-xs rounded-sm border border-border bg-card md:h-65">
-                <img
-                  src={slide.image}
-                  alt=""
-                  className="absolute inset-0 size-full object-cover"
-                />
-
-                <div className="relative z-10 flex h-full sm:max-w-[50%] flex-col justify-center gap-5 p-7 md:p-9">
-                  {slide.subtitle && (
-                    <p className="text-sm font-bold uppercase text-primary">
-                      {slide.subtitle}
-                    </p>
-                  )}
-                  <h1 className="text-2xl font-bold leading-tight md:text-2xl text-black">
+            <CarouselItem key={slide.id} className="basis-full pl-4 lg:basis-1/2">
+              <article className="relative h-62.5 overflow-hidden rounded-2xl border border-border bg-card shadow-xs md:h-65">
+                <img src={slide.image} alt="" className="absolute inset-0 size-full object-cover" />
+                <div className="absolute inset-0 bg-white/45" />
+                <div className="relative z-10 flex h-full max-w-[90%] flex-col justify-center gap-5 p-7 sm:max-w-[58%] md:p-9">
+                  <p className="text-sm font-bold uppercase tracking-wide text-primary">
+                    {slide.subtitle}
+                  </p>
+                  <h1 className="text-2xl font-bold leading-tight text-black md:text-3xl">
                     {slide.title}
                   </h1>
-                  <Button
-                    asChild
-                    variant="secondary"
-                    className="h-10 w-fit rounded-sm px-7 text-base"
-                  >
+                  <Button asChild variant="secondary" className="h-10 w-fit rounded-sm px-7 text-base">
                     <Link to={PUBLIC_ROUTES.PRODUCTS}>{slide.action}</Link>
                   </Button>
                 </div>
-
-                {/* <p className="absolute bottom-3 left-7 right-7 z-10
-                 truncate text-center text-sm text-muted-foreground">
-                  {slide.note}
-                </p> */}
               </article>
             </CarouselItem>
           ))}
         </CarouselContent>
-
-        <CarouselPrevious className="-left-4 size-10! hidden bg-background shadow-lg lg:inline-flex" />
+        <CarouselPrevious className="-left-4 hidden size-10! bg-background shadow-lg lg:inline-flex" />
         <CarouselNext className="-right-4 size-10! bg-background shadow-lg" />
       </Carousel>
     </section>

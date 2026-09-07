@@ -33,6 +33,7 @@ import type {
 } from '@/types/products.type'
 import type { CartResponseType } from '@/types/cart.type'
 import type { AIChatRequest, AIChatResponse } from '@/types/ai.type'
+import type { PersonalizedHomepageResponse } from '@/types/personalized-homepage.type'
 
 export const loginMutationFn = async (data: LoginType): Promise<AuthResponse> =>
   (await API.post<AuthResponse>('/auth/login', data)).data
@@ -52,6 +53,9 @@ export const getProductDealsQueryFn = async (
 ): Promise<DealsResponseType> =>
   (await API.get<DealsResponseType>('/products/deals', { params: { limit } }))
     .data
+
+export const getPersonalizedHomepageQueryFn = async (): Promise<PersonalizedHomepageResponse> =>
+  (await API.get<PersonalizedHomepageResponse>('/homepage/personalized')).data
 
 export const getProductsQueryFn = async (
   params?: ProductParams,
