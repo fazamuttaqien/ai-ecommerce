@@ -26,6 +26,17 @@ export type RecommendationResponse = {
   personalized: boolean;
 };
 
+type ScoredRecommendation = {
+  product: RecommendationProduct;
+  score: number;
+  categoryScore: number;
+  brandScore: number;
+  semanticScore: number;
+  priceScore: number;
+  discountScore: number;
+  behavioralScore: number;
+};
+
 const clamp = (value: number, min = 0, max = 1) => Math.max(min, Math.min(max, value));
 const normalize = (value: number, max: number) => (max > 0 ? clamp(value / max) : 0);
 
@@ -87,7 +98,7 @@ export class RecommendationService {
     const preferredPrice = weightedPrice.weight ? weightedPrice.total / weightedPrice.weight : 0;
     const maxBehavior = Math.max(1, ...positiveSignals.values());
 
-    const scored = data.candidates.map((product) => {
+    const scored: ScoredRecommendation[] = data.candidates.map((product) => {
       const behavioralScore = normalize(positiveSignals.get(product.id) ?? 0, maxBehavior);
       const categoryScore = product.category?.id ? normalize(categoryAffinity.get(product.category.id) ?? 0, maxCategoryAffinity) : 0;
       const brandScore = normalize(brandAffinity.get(product.brand) ?? 0, maxBrandAffinity);
@@ -128,7 +139,7 @@ export class RecommendationService {
 
   private getReason(
     product: RecommendationProduct,
-    signals: { categoryScore: number; brandScore: number; semanticScore: number; priceScore: number; discountScore: number; behavioralScore: number },
+    signals: Omit<ScoredRecommendation, 'product' | 'score'>,
     data: RecommendationRepositoryResponse,
     categoryAffinity: Map<string, number>,
     brandAffinity: Map<string, number>,
@@ -159,8 +170,8 @@ export class RecommendationService {
     return totalWeight ? result.map((value) => value / totalWeight) : null;
   }
 
-  private applyDiversity(ranked: Array<{ product: RecommendationProduct; score: number }>, limit: number) {
-    const selected: Array<{ product: RecommendationProduct; score: number }> = [];
+  private applyDiversity(ranked: ScoredRecommendation[], limit: number): ScoredRecommendation[] {
+    const selected: ScoredRecommendation[] = [];
     const categoryCounts = new Map<string, number>();
     const brandCounts = new Map<string, number>();
     const remaining = [...ranked];
