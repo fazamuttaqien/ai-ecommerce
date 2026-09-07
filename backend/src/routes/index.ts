@@ -10,6 +10,7 @@ import reviewRoute from './review.route';
 import aiRoute from './ai.route';
 import productInteractionRoute from './product-interaction.route';
 import recommendationRoute from './recommendation.route';
+import personalizedHomepageRoute from './personalized-homepage.route';
 
 const router: Router = Router();
 
@@ -24,5 +25,6 @@ router.use('/reviews', reviewRoute);
 router.use('/ai', aiRoute);
 router.use('/product-interactions', productInteractionRoute);
 router.use('/recommendations', recommendationRoute);
+router.use('/homepage', personalizedHomepageRoute);
 
 export default router;
