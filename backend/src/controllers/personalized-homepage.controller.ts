@@ -18,7 +18,7 @@ export const getPersonalizedHomepageController = asyncHandler(
         message: 'Personalized homepage retrieved successfully',
         ...result,
       });
-    } catch (error) {
+    } catch {
       const [popularResult, dealsResult] = await Promise.all([
         getProductsService({
           page: 1,
