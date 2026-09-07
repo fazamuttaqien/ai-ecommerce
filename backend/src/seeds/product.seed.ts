@@ -334,7 +334,9 @@ const productsData: readonly ProductSeed[] = [
 
 const getProductImages = (name: string): string[] => {
   const seed = slugify(name, { lower: true, strict: true });
-  return [1, 2, 3, 4].map((index) => `https://picsum.photos/seed/${seed}-${index}/800/800`);
+  return [1, 2, 3, 4].map(
+    (index) => `https://picsum.photos/seed/${seed}-${index}/800/800`,
+  );
 };
 
 const seedProducts = async () => {
@@ -381,12 +383,43 @@ const seedProducts = async () => {
       );
 
     await db.delete(products);
-    const rows = productsData.map(([name, category, brand, description, originalPrice, discountPercent, stockCount, unit]) => {
-      const categoryId = categoryMap.get(category);
-      if (!categoryId) throw new Error(`Category not found: ${category}`);
-      return { userId: adminId, categoryId, name, brand, slug: slugify(name, { lower: true, strict: true }), description, images: getProductImages(name), originalPrice, salePrice: originalPrice * (1 - discountPercent / 100), discountPercent, discountLabel: discountPercent > 0 ? `${discountPercent}% OFF` : null, stockCount, unit, isActive: true, ratingAverage: 0, reviewCount: 0 };
-    });
-    const created = await db.insert(products).values(rows).returning({ id: products._id });
+    const rows = productsData.map(
+      ([
+        name,
+        category,
+        brand,
+        description,
+        originalPrice,
+        discountPercent,
+        stockCount,
+        unit,
+      ]) => {
+        const categoryId = categoryMap.get(category);
+        if (!categoryId) throw new Error(`Category not found: ${category}`);
+        return {
+          userId: adminId,
+          categoryId,
+          name,
+          brand,
+          slug: slugify(name, { lower: true, strict: true }),
+          description,
+          images: getProductImages(name),
+          originalPrice,
+          salePrice: originalPrice * (1 - discountPercent / 100),
+          discountPercent,
+          discountLabel: discountPercent > 0 ? `${discountPercent}% OFF` : null,
+          stockCount,
+          unit,
+          isActive: true,
+          ratingAverage: 0,
+          reviewCount: 0,
+        };
+      },
+    );
+    const created = await db
+      .insert(products)
+      .values(rows)
+      .returning({ id: products._id });
     console.log(`${created.length} products seeded successfully`);
   } catch (error) {
     console.error('Seed failed:', error);
