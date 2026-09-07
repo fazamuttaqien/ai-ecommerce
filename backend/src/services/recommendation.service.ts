@@ -6,8 +6,19 @@ import {
   type RecommendationRepositoryResponse,
 } from '../repositories/recommendation.repository';
 
+export type RecommendationReason =
+  | 'recent-purchases'
+  | 'liked-category'
+  | 'liked-brand'
+  | 'similar-to-history'
+  | 'cart-interest'
+  | 'popular-in-interests'
+  | 'special-offer'
+  | 'popular-fallback';
+
 export type RecommendationResultItem = Omit<RecommendationProduct, 'embedding'> & {
   recommendationScore: number;
+  recommendationReason: RecommendationReason;
 };
 
 export type RecommendationResponse = {
@@ -67,8 +78,13 @@ export class RecommendationService {
     const maxCategoryAffinity = Math.max(0, ...categoryAffinity.values());
     const maxBrandAffinity = Math.max(0, ...brandAffinity.values());
     const preferenceVector = this.buildPreferenceVector(data, seedWeights);
-    const priceValues = data.preferenceProducts.filter((product) => seedWeights.has(product.id)).map((product) => product.salePrice);
-    const preferredPrice = priceValues.length ? priceValues.reduce((sum, price) => sum + price, 0) / priceValues.length : 0;
+    const weightedPrice = data.preferenceProducts
+      .filter((product) => seedWeights.has(product.id))
+      .reduce((result, product) => {
+        const weight = seedWeights.get(product.id) ?? 0;
+        return { total: result.total + product.salePrice * weight, weight: result.weight + weight };
+      }, { total: 0, weight: 0 });
+    const preferredPrice = weightedPrice.weight ? weightedPrice.total / weightedPrice.weight : 0;
     const maxBehavior = Math.max(1, ...positiveSignals.values());
 
     const scored = data.candidates.map((product) => {
@@ -89,7 +105,7 @@ export class RecommendationService {
         ratingScore * recommendationConfig.weights.rating +
         discountScore * recommendationConfig.weights.discount +
         priceScore * recommendationConfig.weights.price;
-      return { product, score };
+      return { product, score, categoryScore, brandScore, semanticScore, priceScore, discountScore, behavioralScore };
     });
 
     scored.sort((left, right) => right.score - left.score || left.product.id.localeCompare(right.product.id));
@@ -98,12 +114,34 @@ export class RecommendationService {
     const selected = this.applyDiversity(pool, safeLimit);
 
     return {
-      items: selected.map(({ product, score }) => {
+      items: selected.map(({ product, score, ...signals }) => {
         const { embedding: _embedding, ...item } = product;
-        return { ...item, recommendationScore: Number(score.toFixed(6)) };
+        return {
+          ...item,
+          recommendationScore: Number(score.toFixed(6)),
+          recommendationReason: this.getReason(product, signals, data, categoryAffinity, brandAffinity, preferenceVector),
+        };
       }),
       personalized: positiveSignals.size > 0,
     };
+  }
+
+  private getReason(
+    product: RecommendationProduct,
+    signals: { categoryScore: number; brandScore: number; semanticScore: number; priceScore: number; discountScore: number; behavioralScore: number },
+    data: RecommendationRepositoryResponse,
+    categoryAffinity: Map<string, number>,
+    brandAffinity: Map<string, number>,
+    preferenceVector: number[] | null,
+  ): RecommendationReason {
+    if (data.purchases.some((item) => item.productId === product.id)) return 'recent-purchases';
+    if (data.cart.some((item) => item.productId === product.id)) return 'cart-interest';
+    if (signals.categoryScore >= 0.65 && product.category?.id && categoryAffinity.has(product.category.id)) return 'liked-category';
+    if (signals.brandScore >= 0.65 && brandAffinity.has(product.brand)) return 'liked-brand';
+    if (preferenceVector && product.embedding && signals.semanticScore >= 0.72) return 'similar-to-history';
+    if (signals.discountScore >= 0.25 && (signals.categoryScore >= 0.35 || signals.brandScore >= 0.35 || signals.semanticScore >= 0.55 || signals.priceScore >= 0.65)) return 'special-offer';
+    if (signals.categoryScore >= 0.35) return 'popular-in-interests';
+    return data.purchases.length || data.interactions.length || data.cart.length || data.reviews.length ? 'similar-to-history' : 'popular-fallback';
   }
 
   private buildPreferenceVector(data: RecommendationRepositoryResponse, seedWeights: Map<string, number>): number[] | null {
@@ -135,7 +173,11 @@ export class RecommendationService {
         const categoryId = item.product.category?.id;
         const categoryPenalty = categoryId ? (categoryCounts.get(categoryId) ?? 0) * recommendationConfig.diversity.categoryPenalty : 0;
         const brandPenalty = (brandCounts.get(item.product.brand) ?? 0) * recommendationConfig.diversity.brandPenalty;
-        const diverseScore = item.score - categoryPenalty - brandPenalty;
+        const similarityPenalty = selected.reduce((maxSimilarity, chosen) => {
+          if (!chosen.product.embedding || !item.product.embedding) return maxSimilarity;
+          return Math.max(maxSimilarity, Math.max(0, cosineSimilarity(chosen.product.embedding, item.product.embedding)));
+        }, 0) * recommendationConfig.diversity.similarityPenalty;
+        const diverseScore = item.score - categoryPenalty - brandPenalty - similarityPenalty;
         if (diverseScore > bestScore || (diverseScore === bestScore && item.product.id.localeCompare(remaining[bestIndex].product.id) < 0)) {
           bestScore = diverseScore;
           bestIndex = index;
