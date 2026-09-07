@@ -1,6 +1,13 @@
 import ProductCard from '@/components/product-card'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel'
 import { Progress } from '@/components/ui/progress'
 import { useCart } from '@/hooks/use-cart'
 import { cn } from '@/lib/utils'
@@ -74,35 +81,33 @@ const ProductDetailPage = () => {
       <div className="flex flex-col gap-10 px-4 py-6 animate-pulse">
         <Skeleton className="h-5 w-20" />
 
-        <section className="grid gap-8 lg:grid-cols-[1fr_1.55fr_430px]">
-          {/* Image Skeleton */}
+        <section className="grid gap-8 lg:grid-cols-[3fr_2fr]">
           <div className="flex min-h-95 items-center justify-center">
             <Skeleton className="aspect-square w-full max-h-82.5 rounded-sm" />
           </div>
 
-          {/* Details Skeleton */}
-          <div className="flex flex-col gap-5">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-8 w-3/4" />
-            <Skeleton className="h-4 w-48" />
-            <Skeleton className="h-4 w-24" />
-            <div className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-full" />
-            </div>
-            <div className="border-t border-border pt-5">
-              <Skeleton className="h-6 w-32 mb-2" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-5/6" />
-            </div>
-          </div>
-
-          {/* Cart Card Skeleton */}
           <Card className="h-fit bg-background shadow-none">
-            <CardContent className="flex flex-col gap-5 p-5">
-              <Skeleton className="h-8 w-24" />
-              <Skeleton className="h-12 w-full rounded-sm" />
-              <Skeleton className="h-12 w-full rounded-sm" />
+            <CardContent className="flex flex-col gap-6 p-5">
+              <div className="flex flex-col gap-4">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-8 w-3/4" />
+                <Skeleton className="h-4 w-48" />
+                <Skeleton className="h-4 w-24" />
+                <div className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                </div>
+                <div className="border-t border-border pt-5">
+                  <Skeleton className="h-6 w-32 mb-2" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-5/6" />
+                </div>
+              </div>
+              <div className="border-t border-border pt-5">
+                <Skeleton className="h-8 w-24" />
+                <Skeleton className="h-12 w-full rounded-sm" />
+                <Skeleton className="h-12 w-full rounded-sm" />
+              </div>
             </CardContent>
           </Card>
         </section>
@@ -139,178 +144,198 @@ const ProductDetailPage = () => {
         Back
       </button>
 
-      <section className="grid gap-8 lg:grid-cols-[1fr_1.55fr_430px]">
+      <section className="grid gap-8 lg:grid-cols-[3fr_2fr]">
         <div className="flex min-h-95 items-center justify-center">
-          <img
-            src={product.images[0] || ''}
-            alt={product.name}
-            className="max-h-82.5 w-full object-contain"
-          />
-        </div>
-
-        <div className="flex flex-col gap-5">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="flex text-secondary" aria-hidden="true">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <Star
-                  key={index}
-                  className={cn(
-                    'size-4 fill-current stroke-current',
-                    index >= product.ratingAverage && 'text-gray-300',
-                  )}
-                />
+          <Carousel className="w-full" opts={{ loop: product.images.length > 1 }}>
+            <CarouselContent>
+              {product.images.map((image, index) => (
+                <CarouselItem key={`${image}-${index}`}>
+                  <div className="flex min-h-95 items-center justify-center">
+                    <img
+                      src={image}
+                      alt={`${product.name} - image ${index + 1}`}
+                      className="max-h-105 w-full object-contain"
+                    />
+                  </div>
+                </CarouselItem>
               ))}
-            </span>
-            <span className="font-medium text-foreground">
-              {product.ratingAverage} ({product.reviewCount})
-            </span>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium text-muted-foreground">
-              {product.categoryId.name}
-            </p>
-            <h1 className="max-w-2xl text-2xl font-semibold leading-tight text-foreground">
-              {product.name}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {product.unit ? <span>{product.unit}</span> : null}
-              {product.unit ? <span> · </span> : null}
-              <span className="font-medium text-foreground">Pick it</span>
-            </p>
-          </div>
-
-          <div
-            className={cn(
-              'flex items-center gap-2 text-sm font-medium',
-              stockClassName,
-            )}
-          >
-            <StockIcon className="size-4" />
-            {stock.text}
-          </div>
-
-          <div className="border-t border-border pt-5">
-            <h2 className="text-base font-semibold text-foreground">
-              Description
-            </h2>
-            <p className="mt-2 max-w-2xl text-ellipsis line-clamp-5 text-sm leading-6 text-muted-foreground">
-              {product.description}
-            </p>
-          </div>
+            </CarouselContent>
+            {product.images.length > 1 ? (
+              <>
+                <CarouselPrevious className="left-2" />
+                <CarouselNext className="right-2" />
+              </>
+            ) : null}
+          </Carousel>
         </div>
 
         <Card className="h-fit bg-background shadow-none rounded-sm">
-          <CardContent className="flex flex-col gap-5 p-5">
-            <div className="flex flex-col gap-1">
-              <div className="flex items-end gap-2">
-                <span
-                  className={cn(
-                    'text-2xl font-semibold leading-none',
-                    hasDiscount && 'mark-label',
-                  )}
-                >
-                  ${product.salePrice.toFixed(2)}
+          <CardContent className="flex flex-col gap-6 p-5">
+            <div className="flex flex-col gap-5">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="flex text-secondary" aria-hidden="true">
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <Star
+                      key={index}
+                      className={cn(
+                        'size-4 fill-current stroke-current',
+                        index >= product.ratingAverage && 'text-gray-300',
+                      )}
+                    />
+                  ))}
                 </span>
-                {hasDiscount ? (
-                  <span className="text-lg text-muted-foreground line-through">
-                    ${product.originalPrice.toFixed(2)}
-                  </span>
-                ) : null}
+                <span className="font-medium text-foreground">
+                  {product.ratingAverage} ({product.reviewCount})
+                </span>
               </div>
-              {product.discountLabel ? (
-                <p className="text-sm font-medium text-green-light">
-                  {product.discountLabel}
+
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium text-muted-foreground">
+                  {product.categoryId.name}
                 </p>
-              ) : product.discountPercent ? (
-                <p className="text-sm font-medium text-green-light">
-                  {product.discountPercent}% off
+                <h1 className="max-w-2xl text-2xl font-semibold leading-tight text-foreground">
+                  {product.name}
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  {product.unit ? <span>{product.unit}</span> : null}
+                  {product.unit ? <span> · </span> : null}
+                  <span className="font-medium text-foreground">Pick it</span>
                 </p>
-              ) : null}
+              </div>
+
+              <div
+                className={cn(
+                  'flex items-center gap-2 text-sm font-medium',
+                  stockClassName,
+                )}
+              >
+                <StockIcon className="size-4" />
+                {stock.text}
+              </div>
+
+              <div className="border-t border-border pt-5">
+                <h2 className="text-base font-semibold text-foreground">
+                  Description
+                </h2>
+                <p className="mt-2 max-w-2xl text-ellipsis line-clamp-5 text-sm leading-6 text-muted-foreground">
+                  {product.description}
+                </p>
+              </div>
             </div>
 
-            {isOutofStock ? (
-              <Button className="h-12 cursor-not-allowed! rounded-sm bg-gray-500! text-base opacity-50">
-                <BanIcon />
-                Out of Stock
-              </Button>
-            ) : isInCart ? (
-              <>
-                <div className="flex h-12 items-center justify-between rounded-sm bg-green-light! px-4 text-white">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    className="text-white hover:bg-white/10 hover:text-white"
-                    onClick={() => {
-                      if (cartItem.quantity === 1) {
-                        removeFromCart(product._id)
-                      } else {
-                        updateQuantity(product._id, cartItem.quantity - 1)
-                      }
-                    }}
-                  >
-                    {cartItem.quantity === 1 ? (
-                      <Trash2 className="size-4" />
-                    ) : (
-                      <Minus className="size-4" />
-                    )}
-                  </Button>
-                  <span className="text-sm font-semibold">
-                    {cartItem.quantity} in cart
-                  </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    className="text-white hover:bg-white/10 hover:text-white"
-                    onClick={() => {
-                      updateQuantity(product._id, cartItem.quantity + 1)
-                    }}
-                  >
-                    <Plus className="size-4" />
-                  </Button>
+            <div className="border-t border-border pt-5">
+              <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-end gap-2">
+                    <span
+                      className={cn(
+                        'text-2xl font-semibold leading-none',
+                        hasDiscount && 'mark-label',
+                      )}
+                    >
+                      ${product.salePrice.toFixed(2)}
+                    </span>
+                    {hasDiscount ? (
+                      <span className="text-lg text-muted-foreground line-through">
+                        ${product.originalPrice.toFixed(2)}
+                      </span>
+                    ) : null}
+                  </div>
+                  {product.discountLabel ? (
+                    <p className="text-sm font-medium text-green-light">
+                      {product.discountLabel}
+                    </p>
+                  ) : product.discountPercent ? (
+                    <p className="text-sm font-medium text-green-light">
+                      {product.discountPercent}% off
+                    </p>
+                  ) : null}
                 </div>
-                <div className="mt-0 border-t border-border pt-4">
-                  <h3 className="text-base font-semibold text-foreground">
-                    Item instructions
-                  </h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Add any special instructions here for the picker.
-                  </p>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="flex h-12 items-center justify-between rounded-sm bg-muted px-3">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={() =>
-                      setQuantity((value) => Math.max(1, value - 1))
-                    }
-                  >
-                    <Minus />
+
+                {isOutofStock ? (
+                  <Button className="h-12 cursor-not-allowed! rounded-sm bg-gray-500! text-base opacity-50">
+                    <BanIcon />
+                    Out of Stock
                   </Button>
-                  <span className="text-sm font-semibold">{quantity}</span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={() => setQuantity((value) => value + 1)}
-                  >
-                    <Plus />
-                  </Button>
-                </div>
-                <Button
-                  onClick={handleAddToCart}
-                  className="h-12 rounded-sm bg-green-light! text-base font-semibold"
-                >
-                  Add to cart
-                </Button>
-              </>
-            )}
+                ) : isInCart ? (
+                  <>
+                    <div className="flex h-12 items-center justify-between rounded-sm bg-green-light! px-4 text-white">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        className="text-white hover:bg-white/10 hover:text-white"
+                        onClick={() => {
+                          if (cartItem.quantity === 1) {
+                            removeFromCart(product._id)
+                          } else {
+                            updateQuantity(product._id, cartItem.quantity - 1)
+                          }
+                        }}
+                      >
+                        {cartItem.quantity === 1 ? (
+                          <Trash2 className="size-4" />
+                        ) : (
+                          <Minus className="size-4" />
+                        )}
+                      </Button>
+                      <span className="text-sm font-semibold">
+                        {cartItem.quantity} in cart
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        className="text-white hover:bg-white/10 hover:text-white"
+                        onClick={() => {
+                          updateQuantity(product._id, cartItem.quantity + 1)
+                        }}
+                      >
+                        <Plus className="size-4" />
+                      </Button>
+                    </div>
+                    <div className="mt-0 border-t border-border pt-4">
+                      <h3 className="text-base font-semibold text-foreground">
+                        Item instructions
+                      </h3>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Add any special instructions here for the picker.
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex h-12 items-center justify-between rounded-sm bg-muted px-3">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() =>
+                          setQuantity((value) => Math.max(1, value - 1))
+                        }
+                      >
+                        <Minus />
+                      </Button>
+                      <span className="text-sm font-semibold">{quantity}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => setQuantity((value) => value + 1)}
+                      >
+                        <Plus />
+                      </Button>
+                    </div>
+                    <Button
+                      onClick={handleAddToCart}
+                      className="h-12 rounded-sm bg-green-light! text-base font-semibold"
+                    >
+                      Add to cart
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
           </CardContent>
         </Card>
       </section>
