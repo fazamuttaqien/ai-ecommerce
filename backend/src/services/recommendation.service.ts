@@ -186,7 +186,7 @@ export class RecommendationService {
         const brandPenalty = (brandCounts.get(item.product.brand) ?? 0) * recommendationConfig.diversity.brandPenalty;
         const similarityPenalty = selected.reduce((maxSimilarity, chosen) => {
           if (!chosen.product.embedding || !item.product.embedding) return maxSimilarity;
-          return Math.max(maxSimilarity, Math.max(0, cosineSimilarity(chosen.product.embedding, item.product.embedding)));
+          return Math.max(maxSimilarity, Math.max(0, cosineSimilarity(chosen.product.embedding, item.product.embedding) - 0.75));
         }, 0) * recommendationConfig.diversity.similarityPenalty;
         const diverseScore = item.score - categoryPenalty - brandPenalty - similarityPenalty;
         if (diverseScore > bestScore || (diverseScore === bestScore && item.product.id.localeCompare(remaining[bestIndex].product.id) < 0)) {
