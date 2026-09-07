@@ -23,5 +23,6 @@ export const recommendationConfig = {
   diversity: {
     categoryPenalty: 0.18,
     brandPenalty: 0.12,
+    similarityPenalty: 0.2,
   },
 };
