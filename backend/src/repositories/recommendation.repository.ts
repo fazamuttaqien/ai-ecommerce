@@ -1,6 +1,7 @@
 import { and, desc, eq, gt, inArray, ne } from 'drizzle-orm';
 
 import { embeddingConfig } from '../config/embedding.config';
+import { recommendationConfig } from '../config/recommendation.config';
 import { db } from '../db';
 import {
   cartItems,
@@ -62,16 +63,22 @@ export class RecommendationRepository {
     };
 
     const purchaseSignals = aggregate(purchases.map((row) => ({ productId: row.productId, weight: Math.max(1, row.quantity) })));
-    const interactionSignals = aggregate(interactions.map((row) => ({ productId: row.productId, weight: row.type === 'homepage_click' ? 2 : 1 })));
+    const interactionSignals = aggregate(interactions.map((row) => ({ productId: row.productId, weight: row.type === 'homepage_click' ? recommendationConfig.interactionWeights.homepage_click : recommendationConfig.interactionWeights.view })));
     const cartSignals = aggregate(cart.map((row) => ({ productId: row.productId, weight: Math.max(1, row.quantity) })));
     const reviewSignals = aggregate(userReviews.filter((row) => row.rating >= 4).map((row) => ({ productId: row.productId, weight: row.rating / 5 })));
 
-    const seedIds = [...new Set([
-      ...purchaseSignals.map((item) => item.productId),
-      ...interactionSignals.map((item) => item.productId),
-      ...cartSignals.map((item) => item.productId),
-      ...reviewSignals.map((item) => item.productId),
-    ])].slice(0, preferenceSeedLimit);
+    const seedWeights = new Map<string, number>();
+    const addSeedWeights = (signals: RecommendationSignal[], multiplier: number) => {
+      for (const signal of signals) seedWeights.set(signal.productId, (seedWeights.get(signal.productId) ?? 0) + signal.weight * multiplier);
+    };
+    addSeedWeights(purchaseSignals, recommendationConfig.weights.purchase);
+    addSeedWeights(interactionSignals, recommendationConfig.weights.interaction);
+    addSeedWeights(cartSignals, recommendationConfig.weights.cart);
+    addSeedWeights(reviewSignals, recommendationConfig.weights.review);
+    const seedIds = [...seedWeights.entries()]
+      .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
+      .slice(0, preferenceSeedLimit)
+      .map(([productId]) => productId);
 
     const [preferenceProducts, candidates] = await Promise.all([
       seedIds.length
