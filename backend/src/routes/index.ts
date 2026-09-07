@@ -9,6 +9,7 @@ import orderRoute from './order.route';
 import reviewRoute from './review.route';
 import aiRoute from './ai.route';
 import productInteractionRoute from './product-interaction.route';
+import recommendationRoute from './recommendation.route';
 
 const router: Router = Router();
 
@@ -22,5 +23,6 @@ router.use('/orders', orderRoute);
 router.use('/reviews', reviewRoute);
 router.use('/ai', aiRoute);
 router.use('/product-interactions', productInteractionRoute);
+router.use('/recommendations', recommendationRoute);
 
 export default router;
